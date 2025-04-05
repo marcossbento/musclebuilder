@@ -22,9 +22,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private String weight;
-
     private String height;
+
+    private String weight;
 
     private String goal;
 
