@@ -21,5 +21,5 @@ public class ExerciseDTO {
 
     private String difficultyLevel;
 
-    private String image;
+    private String imageUrl;
 }

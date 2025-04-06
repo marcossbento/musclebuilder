@@ -11,7 +11,7 @@ public class UserDTO {
 
     private Long id;
 
-    private Sring Name;
+    private String Name;
 
     private String email;
 
