@@ -1,6 +1,7 @@
 package com.musclebuilder.service;
 
 import com.musclebuilder.dto.ExerciseDTO;
+import com.musclebuilder.exception.ResourceNotFoundException;
 import com.musclebuilder.model.Exercise;
 import com.musclebuilder.repository.ExerciseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ public class ExerciseService {
     }
 
     public ExerciseDTO getExerciseById(Long id) {
-        Exercise exercise = exerciseRepository.findById()
+        Exercise exercise = exerciseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Exercício não encontrado com id: " +id));
 
         return convertToDTO(exercise);
@@ -34,6 +35,18 @@ public class ExerciseService {
 
     public List<ExerciseDTO> getAllExercises() {
         return exerciseRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ExerciseDTO> getExerciseByMuscleGroup(String muscleGroup) {
+        return exerciseRepository.findByMuscleGroup(muscleGroup).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ExerciseDTO> searchExerciseByName(String name) {
+        return exerciseRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
