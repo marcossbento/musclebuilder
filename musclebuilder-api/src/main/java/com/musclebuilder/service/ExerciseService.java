@@ -45,6 +45,12 @@ public class ExerciseService {
                 .collect(Collectors.toList());
     }
 
+    public List<ExerciseDTO> searchExercisesByName(String name) {
+        return exerciseRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<ExerciseDTO> searchExerciseByName(String name) {
         return exerciseRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(this::convertToDTO)
@@ -97,4 +103,5 @@ public class ExerciseService {
         exercise.setImageUrl(dto.getImageUrl());
         return exercise;
     }
+
 }

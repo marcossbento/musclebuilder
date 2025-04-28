@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/exercises")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 public class ExerciseController {
 
     private final ExerciseService exerciseService;
@@ -35,15 +35,21 @@ public class ExerciseController {
         return ResponseEntity.ok(exercise);
     }
 
-    @GetMapping("/muscle-group/{muscleGroup}")
+    @GetMapping
     public ResponseEntity<List<ExerciseDTO>> getAllExercises() {
         List<ExerciseDTO> exercises = exerciseService.getAllExercises();
         return ResponseEntity.ok(exercises);
     }
 
-    @GetMapping("/search")
+    @GetMapping("/muscle-group/{muscleGroup}")
     public ResponseEntity<List<ExerciseDTO>> getExercisesByMuscleGroup(@PathVariable String muscleGroup) {
         List<ExerciseDTO> exercises = exerciseService.getExerciseByMuscleGroup(muscleGroup);
+        return ResponseEntity.ok(exercises);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ExerciseDTO>> searchExercisesByName(@RequestParam String name) {
+        List<ExerciseDTO> exercises = exerciseService.searchExercisesByName(name);
         return ResponseEntity.ok(exercises);
     }
 
