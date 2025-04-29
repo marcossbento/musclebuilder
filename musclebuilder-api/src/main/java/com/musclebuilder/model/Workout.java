@@ -25,10 +25,14 @@ public class Workout {
 
     private String description;
 
+    @Column(name = "workout_type")
+    private String workoutType;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    //weekNumber and dayNumber for periodization
     @Column(name = "week_number")
     private Integer weekNumber;
 
@@ -70,23 +74,8 @@ public class Workout {
         workoutExercises.add(workoutExercise);
     }
 
-    public void removeExeercise(Exercise exercise) {
+    public void removeExercise(Exercise exercise) {
         workoutExercises.removeIf(workoutExercise -> workoutExercise.getExercise().equals(exercise));
     }
 
-}
-
-// Enum for workout status
-enum WorkoutStatus {
-    ACTIVE,
-    INACTIVE,
-    COMPLETED
-}
-
-// Enum for difficulty level
-enum DifficultyLevel {
-    BEGINNER,
-    INTERMEDIATE,
-    ADVANCED,
-    EXPERT
 }
