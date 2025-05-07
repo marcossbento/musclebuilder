@@ -1,8 +1,11 @@
 package com.musclebuilder.service;
 
+import com.musclebuilder.dto.EmailUpdateDTO;
+import com.musclebuilder.dto.PasswordUpdateDTO;
 import com.musclebuilder.dto.UserDTO;
 import com.musclebuilder.dto.UserRegistrationDTO;
 import com.musclebuilder.exception.ResourceNotFoundException;
+import com.musclebuilder.exception.UnauthorizedAccessException;
 import com.musclebuilder.model.User;
 import com.musclebuilder.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +70,36 @@ public class UserService {
 
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
+    }
+
+    public UserDTO updateEmail(Long userId, EmailUpdateDTO emailUpdateDTO) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + userId));
+
+        if (!passwordEncoder.matches(emailUpdateDTO.getCurrentPassword(), user.getPassword())) {
+            throw new UnauthorizedAccessException("Senha incorreta");
+        }
+
+        user.setEmail(emailUpdateDTO.getNewEmail());
+        User updatedUser = userRepository.save(user);
+
+        return convertToDTO(updatedUser);
+    }
+
+    public void updatePassword(Long userId, PasswordUpdateDTO passwordUpdateDTO) {
+        if (!passwordUpdateDTO.getNewPassword().equals(passwordUpdateDTO.getConfirmPassword())) {
+            throw new IllegalArgumentException("As senhas não correspondem");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + userId));
+
+        if (!passwordEncoder.matches(passwordUpdateDTO.getCurrentPassword(), user.getPassword())) {
+            throw new UnauthorizedAccessException("Senha atual incorreta");
+        }
+
+        user.setPassword(passwordEncoder.encode(passwordUpdateDTO.getNewPassword()));
+        userRepository.save(user);
     }
 
     public void deleteUser(Long id) {
