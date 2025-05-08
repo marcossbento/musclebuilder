@@ -27,8 +27,9 @@ public class Exercise {
 
     private String equipment;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "difficulty_level")
-    private String difficultyLevel;
+    private DifficultyLevel difficultyLevel;
 
     @Column(name = "image_url")
     private String imageUrl;

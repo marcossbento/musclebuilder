@@ -20,7 +20,7 @@ public class UserRegistrationDTO {
     private String email;
 
     @NotBlank(message = "Senha é obrigatório")
-    @Size(min = 6, message = "Senha deve ter pelo menos 6 caracteres")
+    @Size(min = 8, message = "Senha deve ter pelo menos 8 caracteres")
     private String password;
 
     private String height;

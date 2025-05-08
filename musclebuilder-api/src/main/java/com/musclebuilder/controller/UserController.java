@@ -1,5 +1,7 @@
 package com.musclebuilder.controller;
 
+import com.musclebuilder.dto.EmailUpdateDTO;
+import com.musclebuilder.dto.PasswordUpdateDTO;
 import com.musclebuilder.dto.UserDTO;
 import com.musclebuilder.dto.UserRegistrationDTO;
 import com.musclebuilder.service.UserService;
@@ -45,6 +47,18 @@ public class UserController {
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
         UserDTO updatedUser = userService.updateUser(id, userDTO);
         return ResponseEntity.ok(updatedUser);
+    }
+
+    @PatchMapping("/{id}/email")
+    public ResponseEntity<UserDTO> updateEmail(@PathVariable Long id, @Valid @RequestBody EmailUpdateDTO emailUpdateDTO) {
+        UserDTO updatedUser = userService.updateEmail(id, emailUpdateDTO);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<Void> updatePassword(@PathVariable Long id, @Valid @RequestBody PasswordUpdateDTO passwordUpdateDTO) {
+        userService.updatePassword(id, passwordUpdateDTO);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
