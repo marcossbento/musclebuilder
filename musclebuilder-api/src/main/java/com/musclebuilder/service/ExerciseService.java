@@ -51,12 +51,6 @@ public class ExerciseService {
                 .collect(Collectors.toList());
     }
 
-    public List<ExerciseDTO> searchExerciseByName(String name) {
-        return exerciseRepository.findByNameContainingIgnoreCase(name).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
     public ExerciseDTO updateExercise(Long id, ExerciseDTO exerciseDTO) {
         Exercise exercise = exerciseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Exercício não econtrado com id: " + id));
