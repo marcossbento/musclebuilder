@@ -80,6 +80,10 @@ public class UserService {
             throw new UnauthorizedAccessException("Senha incorreta");
         }
 
+        if (userRepository.existsByEmail(emailUpdateDTO.getNewEmail()) && !user.getEmail().equals(emailUpdateDTO.getNewEmail())) {
+            throw new IllegalStateException("Este e-mail já está em uso");
+        }
+
         user.setEmail(emailUpdateDTO.getNewEmail());
         User updatedUser = userRepository.save(user);
 
