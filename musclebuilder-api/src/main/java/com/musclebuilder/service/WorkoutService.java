@@ -88,8 +88,8 @@ public class WorkoutService {
                 .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado"));
 
         workout.setName(workoutDTO.getName());
-        workout.setDescription(workout.getDescription());
-        workout.setWorkoutType(workout.getWorkoutType());
+        workout.setDescription(workoutDTO.getDescription());
+        workout.setWorkoutType(workoutDTO.getWorkoutType());
         workout.setWeekNumber(workoutDTO.getWeekNumber());
         workout.setDayNumber(workoutDTO.getDayNumber());
         workout.setEstimatedDurationMinutes(workoutDTO.getEstimatedDurationMinutes());
@@ -127,6 +127,12 @@ public class WorkoutService {
         workoutRepository.deleteById(id);
     }
 
+    public Long getUserIdByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com email: " + email));
+        return user.getId();
+    }
+
     private WorkoutDTO convertToDTO(Workout workout) {
         List<WorkoutDTO.WorkoutExerciseDTO> exerciseDTOs = workout.getWorkoutExercises().stream()
                 .sorted(Comparator.comparingInt(WorkoutExercise::getOrderPosition))
@@ -150,9 +156,9 @@ public class WorkoutService {
                 workout.getUser().getId(),
                 workout.getWeekNumber(),
                 workout.getDayNumber(),
-                workout.getStatus() != null ? workout.getStatus().name() : null,
+                workout.getStatus(),
                 workout.getEstimatedDurationMinutes(),
-                workout.getDifficultyLevel() != null ? workout.getDifficultyLevel().name() : null,
+                workout.getDifficultyLevel(),
                 exerciseDTOs,
                 workout.getCreatedAt(),
                 workout.getUpdatedAt()
@@ -172,14 +178,14 @@ public class WorkoutService {
         workout.setWeekNumber(dto.getWeekNumber());
         workout.setDayNumber(dto.getDayNumber());
 
-        if (dto.getStatus() != null) {
-            workout.setStatus(WorkoutStatus.valueOf(dto.getStatus()));
+        if (dto.getWorkoutStatus() != null) {
+            workout.setStatus(dto.getWorkoutStatus());
         }
 
         workout.setEstimatedDurationMinutes(dto.getEstimatedDurationMinutes());
 
         if (dto.getDifficultyLevel() != null) {
-            workout.setDifficultyLevel(DifficultyLevel.valueOf(dto.getDifficultyLevel()));
+            workout.setDifficultyLevel(dto.getDifficultyLevel());
         }
 
         //Conversão de exercícios

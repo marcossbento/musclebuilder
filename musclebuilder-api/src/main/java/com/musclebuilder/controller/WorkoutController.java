@@ -9,11 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
 @RequestMapping("api/workouts")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:4200")
 public class WorkoutController {
 
     private final WorkoutService workoutService;
@@ -24,33 +25,43 @@ public class WorkoutController {
     }
 
     @PostMapping
-    public ResponseEntity<WorkoutDTO> createWorkout(@Valid @RequestBody WorkoutDTO workoutDTO, @AuthenticationPrincipal UserPrincipal currentUser) {
-        WorkoutDTO createdWorkout = workoutService.createWorkout(workoutDTO, currentUser.getId());
+    public ResponseEntity<WorkoutDTO> createWorkout(@Valid @RequestBody WorkoutDTO workoutDTO, Principal principal) {
+        Long userId = getUserIdFromPrincipal(principal);
+        WorkoutDTO createdWorkout = workoutService.createWorkout(workoutDTO, userId);
         return new ResponseEntity<>(createdWorkout, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<WorkoutDTO> getWorkoutById(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal currentUser) {
-        WorkoutDTO workout = workoutService.getWorkoutById(id, currentUser.getId());
+    public ResponseEntity<WorkoutDTO> getWorkoutById(@PathVariable Long id, Principal principal) {
+        Long userId = getUserIdFromPrincipal(principal);
+        WorkoutDTO workout = workoutService.getWorkoutById(id, userId);
         return ResponseEntity.ok(workout);
     }
 
     @GetMapping
-    public ResponseEntity<List<WorkoutDTO>> getUserWorkouts(@AuthenticationPrincipal UserPrincipal currentUser) {
-        List<WorkoutDTO> workouts = workoutService.getUserWorkouts(currentUser.getId());
+    public ResponseEntity<List<WorkoutDTO>> getUserWorkouts(Principal principal) {
+        Long userId = getUserIdFromPrincipal(principal);
+        List<WorkoutDTO> workouts = workoutService.getUserWorkouts(userId);
         return ResponseEntity.ok(workouts);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<WorkoutDTO> updateWorkout(@PathVariable Long id, @Valid @RequestBody WorkoutDTO workoutDTO, @AuthenticationPrincipal UserPrincipal currentUser) {
-        WorkoutDTO updatedWorkout = workoutService.updateWorkout(id, workoutDTO, currentUser.getId());
+    public ResponseEntity<WorkoutDTO> updateWorkout(@PathVariable Long id, @Valid @RequestBody WorkoutDTO workoutDTO, Principal principal) {
+        Long userId = getUserIdFromPrincipal(principal);
+        WorkoutDTO updatedWorkout = workoutService.updateWorkout(id, workoutDTO, userId);
         return ResponseEntity.ok(updatedWorkout);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteWorkout(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal currentUser) {
-        workoutService.deleteWorkout(id, currentUser.getId());
+    public ResponseEntity<Void> deleteWorkout(@PathVariable Long id, Principal principal) {
+        Long userId = getUserIdFromPrincipal(principal);
+        workoutService.deleteWorkout(id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    private Long getUserIdFromPrincipal(Principal principal) {
+        String username = principal.getName();
+        return workoutService.getUserIdByEmail(username);
     }
 
 }

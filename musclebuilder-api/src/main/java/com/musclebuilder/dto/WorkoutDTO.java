@@ -2,6 +2,8 @@ package com.musclebuilder.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.musclebuilder.model.DifficultyLevel;
+import com.musclebuilder.model.WorkoutStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -34,11 +36,11 @@ public class WorkoutDTO {
 
     private Integer dayNumber;
 
-    private String status;
+    private WorkoutStatus workoutStatus;
 
     private Integer estimatedDurationMinutes;
 
-    private String difficultyLevel;
+    private DifficultyLevel difficultyLevel;
 
     private List<WorkoutExerciseDTO> exercises = new ArrayList<>();
 
