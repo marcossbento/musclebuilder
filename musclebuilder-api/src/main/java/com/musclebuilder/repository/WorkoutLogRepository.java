@@ -16,7 +16,11 @@ import java.util.Optional;
 @Repository
 public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, Long> {
 
+    // Busca por usuário com paginação
     Page<WorkoutLog> findByUserIdOrderByStartedAtDesc(Long userId, Pageable pageable);
+
+    // Busca logs por usuário e status
+    List<WorkoutLog> findByUserIdAndStatusOrderByStartedAtDesc(Long userId, WorkoutLogStatus status);
 
     //Busca logs por período específico
     @Query("SELECT wl FROM WorkoutLog wl WHERE wl.user.id = :userId " +
@@ -33,7 +37,7 @@ public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, Long> {
             "WHERE wl.user.id = :userId AND wl.status = 'COMPLETED'")
     Double getTotalVolumeByUserId(@Param("userId") Long userId);
 
-    //Frenquência semanal
+    //Frequência semanal
     @Query("SELECT COUNT(wl) FROM WorkoutLog wl WHERE wl.user.id = :userId " +
             "AND wl.status = 'COMPLETED' " +
             "AND wl.startedAt >= :weekStart")
@@ -47,4 +51,10 @@ public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, Long> {
 
     //Busca logs baseados no template de treino original
     List<WorkoutLog> findByWorkoutIdOrderByStartedAtDesc(Long workoutId);
+
+    @Query("SELECT wl FROM WorkoutLog wl LEFT JOIN FETCH wl.exerciseLogs WHERE wl.id = :id")
+    Optional<WorkoutLog> findByIdWithExerciseLogs(@Param("id") Long id);
+
+    @Query("SELECT wl FROM WorkoutLog wl LEFT JOIN FETCH wl.exerciseLogs WHERE wl.user.id = :userId")
+    List<WorkoutLog> findByUserIdWithExerciseLogs(@Param("userId") Long userId);
 }

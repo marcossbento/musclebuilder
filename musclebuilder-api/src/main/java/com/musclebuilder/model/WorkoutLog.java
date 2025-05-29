@@ -51,7 +51,7 @@ public class WorkoutLog {
     @Column(name = "status")
     private WorkoutLogStatus status = WorkoutLogStatus.IN_PROGRESS;
 
-    @OneToMany(mappedBy = "workoutLog", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "workoutLog", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ExerciseLog> exerciseLogs = new ArrayList<>();
 
     @Column(name = "created_at")
@@ -59,6 +59,17 @@ public class WorkoutLog {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    //Métodos auxiliares para configuração do relacionamento bidirecional
+    public void addExerciseLog(ExerciseLog exerciseLog) {
+        exerciseLogs.add(exerciseLog);
+        exerciseLog.setWorkoutLog(this); //Configura ambos os lados
+    }
+
+    public void removeExerciseLog(ExerciseLog exerciseLog) {
+        exerciseLogs.remove(exerciseLog);
+        exerciseLog.setWorkoutLog(null); //Remove ambos os lados
+    }
 
     @PrePersist
     protected void onCreate() {

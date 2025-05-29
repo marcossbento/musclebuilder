@@ -4,17 +4,19 @@ import com.musclebuilder.model.ExerciseLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Repository
 public interface ExerciseLogRepository extends JpaRepository<ExerciseLog, Long> {
 
     //Busca logs de exercício a partir do workoutLog
     List<ExerciseLog> findByWorkoutLogIdOrderByOrderPosition(Long workoutLogId);
 
     //Progresso de exercício específico por user
-    @Query("SELECT el FROM ExerciseLog el" +
+    @Query("SELECT el FROM ExerciseLog el " +
             "JOIN el.workoutLog wl " +
             "WHERE wl.user.id = :userId AND el.exercise.id = :exerciseId " +
             "AND wl.status = 'COMPLETED' " +
@@ -22,17 +24,24 @@ public interface ExerciseLogRepository extends JpaRepository<ExerciseLog, Long> 
     )
     List<ExerciseLog> findExerciseProgressByUser(@Param("userId") Long userId, @Param("exerciseId") Long exerciseId);
 
-    //Volume total por exercício
-    @Query("SELECT COALESCE(SUM(el.volume), 0) FROM ExerciseLog el " +
+    //Máximo peso por exercício
+    @Query("SELECT MAX(el.maxWeight) FROM ExerciseLog el " +
             "JOIN el.workoutLog wl " +
             "WHERE wl.user.id = :userId AND el.exercise.id = :exerciseId " +
             "AND wl.status = 'COMPLETED'"
     )
     Double getMaxWeightForExercise(@Param("userId") Long userId, @Param("exerciseId") Long exerciseId);
 
+    @Query("SELECT COALESCE(SUM(el.volume), 0) FROM ExerciseLog el " +
+            "JOIN el.workoutLog wl " +
+            "WHERE wl.user.id = :userId AND el.exercise.id = :exerciseId " +
+            "AND wl.status = 'COMPLETED'"
+    )
+    Double getTotalVolumeForExercise(@Param("userId") Long userId, @Param("exerciseId") Long exerciseId);
+
     //Logs de exercício por período específico
     @Query("SELECT el FROM ExerciseLog el " +
-            "JOIN el.workout wl " +
+            "JOIN el.workoutLog wl " +
             "WHERE wl.user.id = :userId " +
             "AND wl.startedAt BETWEEN :startDate AND :endDate " +
             "AND wl.status = 'COMPLETED' " +
