@@ -18,7 +18,7 @@ CREATE TABLE users (
 -- Exercícios
 CREATE TABLE exercises (
   id              BIGSERIAL PRIMARY KEY,
-  name            VARCHAR(255) NOT NULL,
+  name            VARCHAR(255) NOT NULL UNIQUE,
   description     TEXT,
   muscle_group    VARCHAR(255),
   equipment       VARCHAR(255),
