@@ -6,12 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "exercise_logs")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ExerciseLog {
 
     @Id
@@ -70,6 +68,210 @@ public class ExerciseLog {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public ExerciseLog() {}
+
+    public ExerciseLog(final Long id, final WorkoutLog workoutLog, final Exercise exercise, final String exerciseName, final Integer setsCompleted, final String repsPerSet, final Double weightUsed, final Integer restSeconds, final Double volume, final Double maxWeight, final Integer totalReps, final Integer orderPosition, final String notes, final Integer difficultyRating, final LocalDateTime startedAt, final LocalDateTime completedAt, final LocalDateTime createdAt, final LocalDateTime updatedAt) {
+        this.id = id;
+        this.workoutLog = workoutLog;
+        this.exercise = exercise;
+        this.exerciseName = exerciseName;
+        this.setsCompleted = setsCompleted;
+        this.repsPerSet = repsPerSet;
+        this.weightUsed = weightUsed;
+        this.restSeconds = restSeconds;
+        this.volume = volume;
+        this.maxWeight = maxWeight;
+        this.totalReps = totalReps;
+        this.orderPosition = orderPosition;
+        this.notes = notes;
+        this.difficultyRating = difficultyRating;
+        this.startedAt = startedAt;
+        this.completedAt = completedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+
+    public void setId(final Long id) {
+        this.id = id;
+    }
+
+    public WorkoutLog getWorkoutLog() {
+        return this.workoutLog;
+    }
+
+    public void setWorkoutLog(final WorkoutLog workoutLog) {
+        this.workoutLog = workoutLog;
+    }
+
+    public Exercise getExercise() {
+        return this.exercise;
+    }
+
+    public void setExercise(final Exercise exercise) {
+        this.exercise = exercise;
+    }
+
+    public String getExerciseName() {
+        return this.exerciseName;
+    }
+
+    public void setExerciseName(final String exerciseName) {
+        this.exerciseName = exerciseName;
+    }
+
+    public Integer getSetsCompleted() {
+        return this.setsCompleted;
+    }
+
+    public void setSetsCompleted(final Integer setsCompleted) {
+        this.setsCompleted = setsCompleted;
+    }
+
+    public String getRepsPerSet() {
+        return this.repsPerSet;
+    }
+
+    public void setRepsPerSet(final String repsPerSet) {
+        this.repsPerSet = repsPerSet;
+    }
+
+    public Double getWeightUsed() {
+        return this.weightUsed;
+    }
+
+    public void setWeightUsed(final Double weightUsed) {
+        this.weightUsed = weightUsed;
+    }
+
+    public Integer getRestSeconds() {
+        return this.restSeconds;
+    }
+
+    public void setRestSeconds(final Integer restSeconds) {
+        this.restSeconds = restSeconds;
+    }
+
+    public Double getVolume() {
+        return this.volume;
+    }
+
+    public void setVolume(final Double volume) {
+        this.volume = volume;
+    }
+
+    public Double getMaxWeight() {
+        return this.maxWeight;
+    }
+
+    public void setMaxWeight(final Double maxWeight) {
+        this.maxWeight = maxWeight;
+    }
+
+    public Integer getTotalReps() {
+        return this.totalReps;
+    }
+
+    public void setTotalReps(final Integer totalReps) {
+        this.totalReps = totalReps;
+    }
+
+    public Integer getOrderPosition() {
+        return this.orderPosition;
+    }
+
+    public void setOrderPosition(final Integer orderPosition) {
+        this.orderPosition = orderPosition;
+    }
+
+    public String getNotes() {
+        return this.notes;
+    }
+
+    public void setNotes(final String notes) {
+        this.notes = notes;
+    }
+
+    public Integer getDifficultyRating() {
+        return this.difficultyRating;
+    }
+
+    public void setDifficultyRating(final Integer difficultyRating) {
+        this.difficultyRating = difficultyRating;
+    }
+
+    public LocalDateTime getStartedAt() {
+        return this.startedAt;
+    }
+
+    public void setStartedAt(final LocalDateTime startedAt) {
+        this.startedAt = startedAt;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return this.completedAt;
+    }
+
+    public void setCompletedAt(final LocalDateTime completedAt) {
+        this.completedAt = completedAt;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return this.createdAt;
+    }
+
+    public void setCreatedAt(final LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return this.updatedAt;
+    }
+
+    public void setUpdatedAt(final LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        final ExerciseLog that = (ExerciseLog) o;
+
+        // Se ambos têm ID, use o ID
+        if (id != null && that.id != null) {
+            return Objects.equals(id, that.id);
+        }
+
+        // Caso contrário, use a combinação única de negócio
+        return Objects.equals(workoutLog != null ? workoutLog.getId() : null,
+                that.workoutLog != null ? that.workoutLog.getId() : null) &&
+                Objects.equals(exercise != null ? exercise.getId() : null,
+                        that.exercise != null ? that.exercise.getId() : null) &&
+                Objects.equals(orderPosition, that.orderPosition);
+    }
+
+    @Override
+    public String toString() {
+        return "ExerciseLog{" +
+                "id=" + id +
+                ", workoutLogId=" + (workoutLog != null ? workoutLog.getId() : null) +
+                ", exerciseId=" + (exercise != null ? exercise.getId() : null) +
+                ", exerciseName='" + exerciseName + '\'' +
+                ", setsCompleted=" + setsCompleted +
+                ", repsPerSet='" + repsPerSet + '\'' +
+                ", weightUsed=" + weightUsed +
+                ", volume=" + volume +
+                ", totalReps=" + totalReps +
+                ", orderPosition=" + orderPosition +
+                ", difficultyRating=" + difficultyRating +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 
     @PrePersist
     protected void onCreate() {
