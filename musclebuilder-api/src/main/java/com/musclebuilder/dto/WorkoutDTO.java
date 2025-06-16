@@ -7,71 +7,63 @@ import com.musclebuilder.model.WorkoutStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class WorkoutDTO {
+public record WorkoutDTO (
 
-    private Long id;
+    Long id,
 
     @NotBlank(message = "O nome do treino é obrigatório")
     @Size(min = 3, max = 100, message = "O nome deve ter entre 3 e 100 caracteres")
-    private String name;
+    String name,
 
-    private String description;
+    String description,
 
-    private String workoutType;
+    String workoutType,
 
-    private Long userId;
+    Long userId,
 
-    private Integer weekNumber;
+    Integer weekNumber,
 
-    private Integer dayNumber;
+    Integer dayNumber,
 
-    private WorkoutStatus workoutStatus;
+    WorkoutStatus workoutStatus,
 
-    private Integer estimatedDurationMinutes;
+    Integer estimatedDurationMinutes,
 
-    private DifficultyLevel difficultyLevel;
+    DifficultyLevel difficultyLevel,
 
-    private List<WorkoutExerciseDTO> exercises = new ArrayList<>();
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
+    List<WorkoutExerciseDTO> exercises,
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updatedAt;
+    LocalDateTime createdAt,
 
-    // DTO interno para representar os exercícios do treino
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class WorkoutExerciseDTO {
-        private Long id;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime updatedAt
+
+    ) {
+    // Record aninhado para exercícios dentro do treino
+    public record WorkoutExerciseDTO (
+        Long id,
 
         @NotNull(message = "O ID do exercício é obrigatório")
-        private Long exerciseId;
+        Long exerciseId,
 
-        private String exerciseName;
+        String exerciseName,
 
         @NotNull(message = "O número de séries é obrigatório")
-        private Integer sets;
+        Integer sets,
 
         @NotNull(message = "O número de repetições é obrigatório")
-        private Integer repsPerSet;
+        Integer repsPerSet,
 
-        private Double weight;
+        Double weight,
 
-        private Integer restSeconds;
+        Integer restSeconds,
 
-        private Integer orderPosition;
-    }
+        Integer orderPosition
+    ) {}
 }
