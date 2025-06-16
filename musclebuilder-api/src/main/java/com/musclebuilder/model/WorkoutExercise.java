@@ -135,7 +135,7 @@ public class WorkoutExercise {
 
         //Se não, use a combinação única de negócio
         return Objects.equals(workout != null ? workout.getId() : null,
-                that.workout != null ? that.workout.getId() : null) &&
+                        that.workout != null ? that.workout.getId() : null) &&
                 Objects.equals(exercise != null ? exercise.getId() : null,
                         that.exercise != null ? that.exercise.getId() : null) &&
                 Objects.equals(orderPosition, that.orderPosition);

@@ -37,18 +37,18 @@ public class WorkoutService {
         Workout workout = convertToEntity(workoutDTO);
         workout.setUser(user);
 
-        if (workoutDTO.getExercises() != null) {
-            workoutDTO.getExercises().forEach(exerciseDTO -> {
-                Exercise exercise = exerciseRepository.findById(exerciseDTO.getExerciseId())
+        if (workoutDTO.exercises() != null) {
+            workoutDTO.exercises().forEach(exerciseDTO -> {
+                Exercise exercise = exerciseRepository.findById(exerciseDTO.exerciseId())
                         .orElseThrow(() -> new ResourceNotFoundException("Exercício não encontrado"));
 
                 workout.addExercise(
                         exercise,
-                        exerciseDTO.getSets(),
-                        exerciseDTO.getRepsPerSet(),
-                        exerciseDTO.getWeight(),
-                        exerciseDTO.getRestSeconds(),
-                        exerciseDTO.getOrderPosition()
+                        exerciseDTO.sets(),
+                        exerciseDTO.repsPerSet(),
+                        exerciseDTO.weight(),
+                        exerciseDTO.restSeconds(),
+                        exerciseDTO.orderPosition()
                 );
             });
         }
@@ -87,28 +87,28 @@ public class WorkoutService {
         Workout workout = workoutRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado"));
 
-        workout.setName(workoutDTO.getName());
-        workout.setDescription(workoutDTO.getDescription());
-        workout.setWorkoutType(workoutDTO.getWorkoutType());
-        workout.setWeekNumber(workoutDTO.getWeekNumber());
-        workout.setDayNumber(workoutDTO.getDayNumber());
-        workout.setEstimatedDurationMinutes(workoutDTO.getEstimatedDurationMinutes());
+        workout.setName(workoutDTO.name());
+        workout.setDescription(workoutDTO.description());
+        workout.setWorkoutType(workoutDTO.workoutType());
+        workout.setWeekNumber(workoutDTO.weekNumber());
+        workout.setDayNumber(workoutDTO.dayNumber());
+        workout.setEstimatedDurationMinutes(workoutDTO.estimatedDurationMinutes());
 
         //Limpa e adiciona exercícios novamente
         workout.getWorkoutExercises().clear();
 
-        if (workoutDTO.getExercises() != null) {
-            workoutDTO.getExercises().forEach(exerciseDTO -> {
-                Exercise exercise = exerciseRepository.findById(exerciseDTO.getExerciseId())
+        if (workoutDTO.exercises() != null) {
+            workoutDTO.exercises().forEach(exerciseDTO -> {
+                Exercise exercise = exerciseRepository.findById(exerciseDTO.exerciseId())
                         .orElseThrow(() -> new ResourceNotFoundException("Exercício não encontrado"));
 
                 workout.addExercise(
                         exercise,
-                        exerciseDTO.getSets(),
-                        exerciseDTO.getRepsPerSet(),
-                        exerciseDTO.getWeight(),
-                        exerciseDTO.getRestSeconds(),
-                        exerciseDTO.getOrderPosition()
+                        exerciseDTO.sets(),
+                        exerciseDTO.repsPerSet(),
+                        exerciseDTO.weight(),
+                        exerciseDTO.restSeconds(),
+                        exerciseDTO.orderPosition()
                 );
             });
         }
@@ -166,43 +166,43 @@ public class WorkoutService {
     }
 
     private Workout convertToEntity(WorkoutDTO dto) {
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + dto.getUserId()));
+        User user = userRepository.findById(dto.userId())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + dto.userId()));
 
         Workout workout = new Workout();
-        workout.setId(dto.getId());
-        workout.setName(dto.getName());
-        workout.setDescription(dto.getDescription());
-        workout.setWorkoutType(dto.getWorkoutType());
+        workout.setId(dto.id());
+        workout.setName(dto.name());
+        workout.setDescription(dto.description());
+        workout.setWorkoutType(dto.workoutType());
         workout.setUser(user);
-        workout.setWeekNumber(dto.getWeekNumber());
-        workout.setDayNumber(dto.getDayNumber());
+        workout.setWeekNumber(dto.weekNumber());
+        workout.setDayNumber(dto.dayNumber());
 
-        if (dto.getWorkoutStatus() != null) {
-            workout.setStatus(dto.getWorkoutStatus());
+        if (dto.workoutStatus() != null) {
+            workout.setStatus(dto.workoutStatus());
         }
 
-        workout.setEstimatedDurationMinutes(dto.getEstimatedDurationMinutes());
+        workout.setEstimatedDurationMinutes(dto.estimatedDurationMinutes());
 
-        if (dto.getDifficultyLevel() != null) {
-            workout.setDifficultyLevel(dto.getDifficultyLevel());
+        if (dto.difficultyLevel() != null) {
+            workout.setDifficultyLevel(dto.difficultyLevel());
         }
 
         //Conversão de exercícios
-        List<WorkoutExercise> workoutExercises = dto.getExercises().stream()
+        List<WorkoutExercise> workoutExercises = dto.exercises().stream()
                 .map(exDto -> {
-                    Exercise exercise = exerciseRepository.findById(exDto.getExerciseId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Exercício não encontrado com o id: " + exDto.getExerciseId()));
+                    Exercise exercise = exerciseRepository.findById(exDto.exerciseId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Exercício não encontrado com o id: " + exDto.exerciseId()));
 
                     WorkoutExercise we = new WorkoutExercise();
-                    we.setId(exDto.getId());
+                    we.setId(exDto.id());
                     we.setWorkout(workout);
                     we.setExercise(exercise);
-                    we.setSets(exDto.getSets());
-                    we.setRepsPerSet(exDto.getRepsPerSet());
-                    we.setWeight(exDto.getWeight());
-                    we.setRestSeconds(exDto.getRestSeconds());
-                    we.setOrderPosition(exDto.getOrderPosition());
+                    we.setSets(exDto.sets());
+                    we.setRepsPerSet(exDto.repsPerSet());
+                    we.setWeight(exDto.weight());
+                    we.setRestSeconds(exDto.restSeconds());
+                    we.setOrderPosition(exDto.orderPosition());
 
                     return we;
                 })
@@ -211,8 +211,8 @@ public class WorkoutService {
         workout.setWorkoutExercises(workoutExercises);
 
         // Mantém timestamps se já existirem (em caso de atualizações)
-        workout.setCreatedAt(dto.getCreatedAt());
-        workout.setUpdatedAt(dto.getUpdatedAt());
+        workout.setCreatedAt(dto.createdAt());
+        workout.setUpdatedAt(dto.updatedAt());
 
         return workout;
     }
