@@ -246,10 +246,24 @@ public class ExerciseLog {
 
         // Caso contrário, use a combinação única de negócio
         return Objects.equals(workoutLog != null ? workoutLog.getId() : null,
-                that.workoutLog != null ? that.workoutLog.getId() : null) &&
+                        that.workoutLog != null ? that.workoutLog.getId() : null) &&
                 Objects.equals(exercise != null ? exercise.getId() : null,
                         that.exercise != null ? that.exercise.getId() : null) &&
                 Objects.equals(orderPosition, that.orderPosition);
+    }
+
+    @Override
+    public int hashCode() {
+
+        if (id != null) {
+            return Objects.hash(id);
+        }
+
+        return Objects.hash(
+                workoutLog != null ? workoutLog.getId() : null,
+                exercise != null ? exercise.getId() : null,
+                orderPosition
+        );
     }
 
     @Override
