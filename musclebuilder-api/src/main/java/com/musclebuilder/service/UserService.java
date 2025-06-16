@@ -29,17 +29,17 @@ public class UserService {
 
     public UserDTO registerUser(UserRegistrationDTO userRegistrationDTO) {
 
-        if (userRepository.existsByEmail(userRegistrationDTO.getEmail())) {
+        if (userRepository.existsByEmail(userRegistrationDTO.email())) {
             throw new IllegalStateException("Este e-mail já está em uso");
         }
 
         User user = new User();
-        user.setName(userRegistrationDTO.getName());
-        user.setEmail(userRegistrationDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(userRegistrationDTO.getPassword()));
-        user.setHeight(userRegistrationDTO.getHeight());
-        user.setWeight(userRegistrationDTO.getWeight());
-        user.setGoal(userRegistrationDTO.getGoal());
+        user.setName(userRegistrationDTO.name());
+        user.setEmail(userRegistrationDTO.email());
+        user.setPassword(passwordEncoder.encode(userRegistrationDTO.password()));
+        user.setHeight(userRegistrationDTO.height());
+        user.setWeight(userRegistrationDTO.weight());
+        user.setGoal(userRegistrationDTO.goal());
 
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);
@@ -62,11 +62,11 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + id));
 
-        user.setName(userDTO.getName());
+        user.setName(userDTO.name());
         //atualização de e-mail e senha em métodos dedicados
-        user.setHeight(userDTO.getHeight());
-        user.setWeight(userDTO.getWeight());
-        user.setGoal(userDTO.getGoal());
+        user.setHeight(userDTO.height());
+        user.setWeight(userDTO.weight());
+        user.setGoal(userDTO.goal());
 
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
@@ -76,33 +76,33 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + userId));
 
-        if (!passwordEncoder.matches(emailUpdateDTO.getCurrentPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(emailUpdateDTO.currentPassword(), user.getPassword())) {
             throw new UnauthorizedAccessException("Senha incorreta");
         }
 
-        if (userRepository.existsByEmail(emailUpdateDTO.getNewEmail()) && !user.getEmail().equals(emailUpdateDTO.getNewEmail())) {
+        if (userRepository.existsByEmail(emailUpdateDTO.newEmail()) && !user.getEmail().equals(emailUpdateDTO.newEmail())) {
             throw new IllegalStateException("Este e-mail já está em uso");
         }
 
-        user.setEmail(emailUpdateDTO.getNewEmail());
+        user.setEmail(emailUpdateDTO.newEmail());
         User updatedUser = userRepository.save(user);
 
         return convertToDTO(updatedUser);
     }
 
     public void updatePassword(Long userId, PasswordUpdateDTO passwordUpdateDTO) {
-        if (!passwordUpdateDTO.getNewPassword().equals(passwordUpdateDTO.getConfirmPassword())) {
+        if (!passwordUpdateDTO.newPassword().equals(passwordUpdateDTO.confirmPassword())) {
             throw new IllegalArgumentException("As senhas não correspondem");
         }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + userId));
 
-        if (!passwordEncoder.matches(passwordUpdateDTO.getCurrentPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(passwordUpdateDTO.currentPassword(), user.getPassword())) {
             throw new UnauthorizedAccessException("Senha atual incorreta");
         }
 
-        user.setPassword(passwordEncoder.encode(passwordUpdateDTO.getNewPassword()));
+        user.setPassword(passwordEncoder.encode(passwordUpdateDTO.newPassword()));
         userRepository.save(user);
     }
 
@@ -115,14 +115,14 @@ public class UserService {
     }
 
     private UserDTO convertToDTO(User user) {
-        UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setName(user.getName());
-        dto.setEmail(user.getEmail());
-        dto.setHeight(user.getHeight());
-        dto.setWeight(user.getWeight());
-        dto.setGoal(user.getGoal());
-        return dto;
+        return new UserDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getHeight(),
+                user.getWeight(),
+                user.getGoal()
+        );
     }
 
 }

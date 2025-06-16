@@ -55,12 +55,12 @@ public class ExerciseService {
         Exercise exercise = exerciseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Exercício não econtrado com id: " + id));
 
-        exercise.setName(exerciseDTO.getName());
-        exercise.setDescription(exerciseDTO.getDescription());
-        exercise.setMuscleGroup(exerciseDTO.getMuscleGroup());
-        exercise.setEquipment(exerciseDTO.getEquipment());
-        exercise.setDifficultyLevel(exerciseDTO.getDifficultyLevel());
-        exercise.setImageUrl(exerciseDTO.getImageUrl());
+        exercise.setName(exerciseDTO.name());
+        exercise.setDescription(exerciseDTO.description());
+        exercise.setMuscleGroup(exerciseDTO.muscleGroup());
+        exercise.setEquipment(exerciseDTO.equipment());
+        exercise.setDifficultyLevel(exerciseDTO.difficultyLevel());
+        exercise.setImageUrl(exerciseDTO.imageUrl());
 
         Exercise updatedExercise = exerciseRepository.save(exercise);
         return convertToDTO(updatedExercise);
@@ -76,25 +76,25 @@ public class ExerciseService {
 
 
     private ExerciseDTO convertToDTO(Exercise exercise) {
-        ExerciseDTO dto = new ExerciseDTO();
-        dto.setId(exercise.getId());
-        dto.setName(exercise.getName());
-        dto.setDescription(exercise.getDescription());
-        dto.setMuscleGroup(exercise.getMuscleGroup());
-        dto.setEquipment(exercise.getEquipment());
-        dto.setDifficultyLevel(exercise.getDifficultyLevel());
-        dto.setImageUrl(exercise.getImageUrl());
-        return dto;
+        return new ExerciseDTO(
+                exercise.getId(),
+                exercise.getName(),
+                exercise.getDescription(),
+                exercise.getMuscleGroup(),
+                exercise.getEquipment(),
+                exercise.getDifficultyLevel(),
+                exercise.getImageUrl()
+        );
     }
 
     private Exercise convertToEntity(ExerciseDTO dto) {
         Exercise exercise = new Exercise();
-        exercise.setName(dto.getName());
-        exercise.setDescription(dto.getDescription());
-        exercise.setMuscleGroup(dto.getMuscleGroup());
-        exercise.setEquipment(dto.getEquipment());
-        exercise.setDifficultyLevel(dto.getDifficultyLevel());
-        exercise.setImageUrl(dto.getImageUrl());
+        exercise.setName(dto.name());
+        exercise.setDescription(dto.description());
+        exercise.setMuscleGroup(dto.muscleGroup());
+        exercise.setEquipment(dto.equipment());
+        exercise.setDifficultyLevel(dto.difficultyLevel());
+        exercise.setImageUrl(dto.imageUrl());
         return exercise;
     }
 
