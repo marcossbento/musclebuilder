@@ -2,28 +2,19 @@ package com.musclebuilder.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserDTO {
 
-    private Long id;
+public record UserDTO (
+    Long id,
 
     @NotBlank(message = "Nome é obrigatório")
-    private String name;
+     String name,
 
     @NotBlank(message = "Email é obrigatório")
     @Email(message = "Formato de e-mail inválido")
-    private String email;
+     String email,
 
-    private String height;
-
-    private String weight;
-
-    private String goal;
-
-}
+    String height,
+    String weight,
+    String goal
+) {}
