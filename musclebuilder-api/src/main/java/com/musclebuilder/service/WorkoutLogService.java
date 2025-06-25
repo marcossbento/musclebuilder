@@ -95,6 +95,27 @@ public class WorkoutLogService {
         return convertToResponse(completedLog);
     }
 
+    @Transactional(readOnly = true)
+    public WorkoutLogResponse getWorkoutLog(Long workoutLogId, Long userId) {
+        WorkoutLog workoutLog = workoutLogRepository.findByIdWithExerciseLogs(workoutLogId)
+                .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado com id: " + workoutLogId));
+
+        if (!workoutLog.getUser().getId().equals(userId)) {
+            throw new UnauthorizedAccessException("Você não tem permissão para visualizar esse registro de treino");
+        }
+
+        return convertToResponse(workoutLog);
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkoutLogResponse> getAllUserWorkoutLogs(Long userId) {
+        List<WorkoutLog> logs = workoutLogRepository.findByUserIdWithExerciseLogs(userId);
+
+        return logs.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+    }
+
     private WorkoutLogResponse convertToResponse(WorkoutLog log) {
         //Converte a lista de entidades ExerciseLog para uma lista de DTOs ExerciseLogDetails
         List<WorkoutLogResponse.ExerciseLogDetails> exerciseDetails = log.getExerciseLogs()
