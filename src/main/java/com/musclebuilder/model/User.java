@@ -3,6 +3,8 @@ package com.musclebuilder.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -34,9 +36,12 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Achievement> achievements = new ArrayList<>();
+
     public User() {}
 
-    public User(final Long id, final String name, final String email, final String password, final String height, final String weight, final String goal, final LocalDateTime createdAt, final LocalDateTime updatedAt) {
+    public User(final Long id, final String name, final String email, final String password, final String height, final String weight, final String goal, final LocalDateTime createdAt, final LocalDateTime updatedAt, final List<Achievement> achievements) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -46,6 +51,7 @@ public class User {
         this.goal = goal;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.achievements = achievements;
     }
 
     public Long getId() {
@@ -118,6 +124,14 @@ public class User {
 
     public void setUpdatedAt(final LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<Achievement> getAchievements() {
+        return this.achievements;
+    }
+
+    public void setAchievements(final List<Achievement> achievements) {
+        this.achievements = achievements;
     }
 
     @PrePersist
