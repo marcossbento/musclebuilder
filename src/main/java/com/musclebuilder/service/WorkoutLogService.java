@@ -26,12 +26,15 @@ public class WorkoutLogService {
     private final WorkoutRepository workoutRepository;
     private final ExerciseRepository exerciseRepository;
 
+    private final GamificationService gamificationService;
+
     @Autowired
-    public WorkoutLogService (WorkoutLogRepository workoutLogRepository, UserRepository userRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository) {
+    public WorkoutLogService (WorkoutLogRepository workoutLogRepository, UserRepository userRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository, GamificationService gamificationService) {
         this.workoutLogRepository = workoutLogRepository;
         this.userRepository = userRepository;
         this.workoutRepository = workoutRepository;
         this.exerciseRepository = exerciseRepository;
+        this.gamificationService = gamificationService;
     }
 
     @Transactional
@@ -92,6 +95,10 @@ public class WorkoutLogService {
         workoutLog.completeWorkout();
 
         WorkoutLog completedLog = workoutLogRepository.save(workoutLog);
+
+        //Após a conclusão do treino, o serviço de gamificação é chamado.
+        gamificationService.checkAndAwardAchievements(userId);
+
         return convertToResponse(completedLog);
     }
 

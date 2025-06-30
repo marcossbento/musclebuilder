@@ -1,14 +1,13 @@
 package com.musclebuilder.controller;
 
-import com.musclebuilder.dto.EmailUpdateDTO;
-import com.musclebuilder.dto.PasswordUpdateDTO;
-import com.musclebuilder.dto.UserDTO;
-import com.musclebuilder.dto.UserRegistrationDTO;
+import com.musclebuilder.dto.*;
+import com.musclebuilder.model.Achievement;
 import com.musclebuilder.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,6 +40,15 @@ public class UserController {
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<UserDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/me/achievements")
+    public ResponseEntity<List<AchievementDTO>> getCurrentUserAchievements(Authentication authentication) {
+        String userEmail = authentication.getName();
+
+        List<AchievementDTO> achievements = userService.getUserAchievements(userService.getUserByEmail(userEmail).id());
+
+        return ResponseEntity.ok(achievements);
     }
 
     @PutMapping("/{id}")

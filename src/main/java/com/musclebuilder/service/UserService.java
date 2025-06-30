@@ -1,16 +1,16 @@
 package com.musclebuilder.service;
 
-import com.musclebuilder.dto.EmailUpdateDTO;
-import com.musclebuilder.dto.PasswordUpdateDTO;
-import com.musclebuilder.dto.UserDTO;
-import com.musclebuilder.dto.UserRegistrationDTO;
+import com.musclebuilder.dto.*;
 import com.musclebuilder.exception.ResourceNotFoundException;
 import com.musclebuilder.exception.UnauthorizedAccessException;
+import com.musclebuilder.model.Achievement;
 import com.musclebuilder.model.User;
+import com.musclebuilder.repository.AchievementRepository;
 import com.musclebuilder.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,11 +20,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AchievementRepository achievementRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AchievementRepository achievementRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.achievementRepository = achievementRepository;
     }
 
     public UserDTO registerUser(UserRegistrationDTO userRegistrationDTO) {
@@ -62,6 +64,20 @@ public class UserService {
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AchievementDTO> getUserAchievements(Long userId) {
+        List<Achievement> achievements = achievementRepository.findByUserId(userId);
+
+        return achievements.stream()
+                .map(achievement -> new AchievementDTO(
+                        achievement.getName(),
+                        achievement.getDescription(),
+                        achievement.getBadgeUrl(),
+                        achievement.getEarnedAt()
+                ))
                 .collect(Collectors.toList());
     }
 
