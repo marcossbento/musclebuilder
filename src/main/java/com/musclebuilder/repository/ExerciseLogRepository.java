@@ -58,4 +58,13 @@ public interface ExerciseLogRepository extends JpaRepository<ExerciseLog, Long> 
             "ORDER BY totalVolume DESC"
     )
     List<Object[]> getTopExercisesByVolume(@Param("userId") Long userId);
+
+    @Query("SELECT COALESCE(SUM(el.volume), 0.0) FROM ExerciseLog el WHERE el.workoutLog.user.id = :userId")
+    double findTotalVolumeByUserId(@Param("userId") Long userId);
+
+    @Query(value = "SELECT e.exercise_name FROM exercise_logs e WHERE e.workout_log_id IN (SELECT id FROM workout_logs WHERE user_id = :userId) GROUP BY e.exercise_name ORDER BY COUNT(e.exercise_name) DESC LIMIT 1", nativeQuery = true)
+    String findMostFrequentExerciseByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT el FROM ExerciseLog el WHERE el.workoutLog.user.id = :userId AND el.exercise.id = :exerciseId ORDER BY el.createdAt ASC")
+    List<ExerciseLog> findExerciseHistory(@Param("userId") Long userId, @Param("exerciseId") Long exerciseId);
 }
