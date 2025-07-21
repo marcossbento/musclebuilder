@@ -42,6 +42,15 @@ public class Exercise {
 
     public Exercise() {}
 
+    public Exercise(String name, String description, String muscleGroup, String equipment, DifficultyLevel difficultyLevel, String imageUrl) {
+        this.name = name;
+        this.description = description;
+        this.muscleGroup = muscleGroup;
+        this.equipment = equipment;
+        this.difficultyLevel = difficultyLevel;
+        this.imageUrl = imageUrl;
+    }
+
     public Exercise(final Long id, final String name, final String description, final String muscleGroup, final String equipment, final DifficultyLevel difficultyLevel, final String imageUrl, final LocalDateTime createdAt, final LocalDateTime updatedAt, final List<ExerciseLog> exerciseLogs) {
         this.id = id;
         this.name = name;
