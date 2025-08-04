@@ -1,13 +1,16 @@
 package com.musclebuilder.service;
 
-import com.musclebuilder.dto.WorkoutDTO;
+import com.musclebuilder.dto.WorkoutCreateDTO;
+import com.musclebuilder.dto.WorkoutResponseDTO;
+import com.musclebuilder.dto.WorkoutUpdateDTO;
 import com.musclebuilder.exception.ResourceNotFoundException;
-import com.musclebuilder.exception.UnauthorizedAccessException;
 import com.musclebuilder.model.*;
 import com.musclebuilder.repository.ExerciseRepository;
 import com.musclebuilder.repository.UserRepository;
 import com.musclebuilder.repository.WorkoutRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,113 +33,103 @@ public class WorkoutService {
     }
 
     @Transactional
-    public WorkoutDTO createWorkout(WorkoutDTO workoutDTO, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+    public WorkoutResponseDTO createWorkout(WorkoutCreateDTO dto) {
+        User currentUser = findCurrentUser();
 
-        Workout workout = convertToEntity(workoutDTO);
-        workout.setUser(user);
+        Workout newWorkout = new Workout(
+                dto.name(),
+                dto.description(),
+                currentUser,
+                dto.difficultyLevel()
+        );
 
-        if (workoutDTO.exercises() != null) {
-            workoutDTO.exercises().forEach(exerciseDTO -> {
-                Exercise exercise = exerciseRepository.findById(exerciseDTO.exerciseId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Exercício não encontrado"));
+        dto.exercises().forEach(exerciseDto -> {
+            Exercise exercise = exerciseRepository.findById(exerciseDto.exerciseId())
+                    .orElseThrow(() -> new EntityNotFoundException("Exercício com ID " + exerciseDto.exerciseId() + " não encontrado"));
 
-                workout.addExercise(
-                        exercise,
-                        exerciseDTO.sets(),
-                        exerciseDTO.repsPerSet(),
-                        exerciseDTO.weight(),
-                        exerciseDTO.restSeconds(),
-                        exerciseDTO.orderPosition()
-                );
-            });
-        }
+            newWorkout.addExercise(
+                    exercise,
+                    exerciseDto.sets(),
+                    exerciseDto.repsPerSet(),
+                    exerciseDto.weight(),
+                    exerciseDto.restSeconds(),
+                    0
+            );
+        });
 
-        Workout savedWorkout = workoutRepository.save(workout);
-        return convertToDTO(savedWorkout);
+        Workout savedWorkout = workoutRepository.save(newWorkout);
+        return mapToResponseDTO(savedWorkout);
     }
 
-    public WorkoutDTO getWorkoutById(Long id, Long userId) {
-        Workout workout = workoutRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado"));
-
-        if (!workout.getUser().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("Você não tem permissão para acessar esse treino");
-        }
-
-        return convertToDTO(workout);
-    }
-
-    public List<WorkoutDTO> getUserWorkouts(Long userId) {
-        List<Workout> workouts = workoutRepository.findByUserId(userId);
-
-        return workouts.stream()
-                .map(this::convertToDTO)
+    @Transactional(readOnly = true)
+    public List<WorkoutResponseDTO> findWorkoutsForCurrentUser() {
+        User currentUser = findCurrentUser();
+        return workoutRepository.findByUserOrderByNameAsc(currentUser).stream()
+                .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
 
-
-    @Transactional
-    public WorkoutDTO updateWorkout(Long id, WorkoutDTO workoutDTO, Long userId) {
-        // Verifica se o workout existe e pertence ao usuário
-        if (!workoutRepository.existsByIdAndUserId(id, userId)) {
-            throw new UnauthorizedAccessException("Você não tem permissão para modificar este treino");
-        }
-
-        Workout workout = workoutRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado"));
-
-        workout.setName(workoutDTO.name());
-        workout.setDescription(workoutDTO.description());
-        workout.setWorkoutType(workoutDTO.workoutType());
-        workout.setWeekNumber(workoutDTO.weekNumber());
-        workout.setDayNumber(workoutDTO.dayNumber());
-        workout.setEstimatedDurationMinutes(workoutDTO.estimatedDurationMinutes());
-
-        //Limpa e adiciona exercícios novamente
-        workout.getWorkoutExercises().clear();
-
-        if (workoutDTO.exercises() != null) {
-            workoutDTO.exercises().forEach(exerciseDTO -> {
-                Exercise exercise = exerciseRepository.findById(exerciseDTO.exerciseId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Exercício não encontrado"));
-
-                workout.addExercise(
-                        exercise,
-                        exerciseDTO.sets(),
-                        exerciseDTO.repsPerSet(),
-                        exerciseDTO.weight(),
-                        exerciseDTO.restSeconds(),
-                        exerciseDTO.orderPosition()
-                );
-            });
-        }
-
-        Workout updatedWorkout = workoutRepository.save(workout);
-        return convertToDTO(updatedWorkout);
+    @Transactional(readOnly = true)
+    public WorkoutResponseDTO findWorkoutsByIdForCurrentUser(Long workoutId) {
+        User currentUser = findCurrentUser();
+        Workout workout = workoutRepository.findByIdAndUser(workoutId, currentUser)
+                .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + " não encontrado"));
+        return mapToResponseDTO(workout);
     }
 
     @Transactional
-    public void deleteWorkout(Long id, Long userId) {
-        // Verifica se o workout existe e pertence ao usuário
-        if (!workoutRepository.existsByIdAndUserId(id, userId)) {
-            throw new UnauthorizedAccessException("Você não tem permissão para excluir este treino");
-        }
+    public void deleteWorkout(Long workoutId) {
+        User currentUser = findCurrentUser();
+        Workout workout = workoutRepository.findByIdAndUser(workoutId, currentUser)
+                        .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + "não encontrado para este usuário"));
 
-        workoutRepository.deleteById(id);
+        workoutRepository.delete(workout);
     }
 
-    public Long getUserIdByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com email: " + email));
-        return user.getId();
+    @Transactional
+    public WorkoutResponseDTO updateWorkout(Long workoutId, WorkoutUpdateDTO dto) {
+        User currentUser = findCurrentUser();
+
+        Workout workoutToUpdate = workoutRepository.findByIdAndUser(workoutId, currentUser)
+                .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + " não encontrado para este usuário"));
+
+        workoutToUpdate.setName(dto.name());
+        workoutToUpdate.setDescription(dto.description());
+        workoutToUpdate.setDifficultyLevel(dto.difficultyLevel());
+
+        workoutToUpdate.getWorkoutExercises().clear();
+
+        dto.exercises().forEach(exerciseDto -> {
+            Exercise exercise = exerciseRepository.findById(exerciseDto.exerciseId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Exercício com ID " + exerciseDto.exerciseId() + " não encontrado."));
+
+            workoutToUpdate.addExercise(
+                    exercise,
+                    exerciseDto.sets(),
+                    exerciseDto.repsPerSet(),
+                    exerciseDto.weight(),
+                    exerciseDto.restSeconds(),
+                    0
+            );
+        });
+
+        Workout updatedWorkout = workoutRepository.save(workoutToUpdate);
+
+        return mapToResponseDTO(updatedWorkout);
     }
 
-    private WorkoutDTO convertToDTO(Workout workout) {
-        List<WorkoutDTO.WorkoutExerciseDTO> exerciseDTOs = workout.getWorkoutExercises().stream()
+    // MÉTODOS AUXILIARES
+
+    private User findCurrentUser() {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário autenticado não encontrado: " + userEmail));
+    }
+
+    private WorkoutResponseDTO mapToResponseDTO(Workout workout) {
+        List<WorkoutResponseDTO.WorkoutExerciseDTO> exerciseDTOs = workout.getWorkoutExercises().stream()
                 .sorted(Comparator.comparingInt(WorkoutExercise::getOrderPosition))
-                .map(we -> new WorkoutDTO.WorkoutExerciseDTO(
+                .map(we -> new WorkoutResponseDTO.WorkoutExerciseDTO(
                         we.getId(),
                         we.getExercise().getId(),
                         we.getExercise().getName(),
@@ -148,7 +141,7 @@ public class WorkoutService {
                 ))
                 .collect(Collectors.toList());
 
-        return new WorkoutDTO(
+        return new WorkoutResponseDTO(
                 workout.getId(),
                 workout.getName(),
                 workout.getDescription(),
@@ -164,57 +157,4 @@ public class WorkoutService {
                 workout.getUpdatedAt()
         );
     }
-
-    private Workout convertToEntity(WorkoutDTO dto) {
-        User user = userRepository.findById(dto.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + dto.userId()));
-
-        Workout workout = new Workout();
-        workout.setId(dto.id());
-        workout.setName(dto.name());
-        workout.setDescription(dto.description());
-        workout.setWorkoutType(dto.workoutType());
-        workout.setUser(user);
-        workout.setWeekNumber(dto.weekNumber());
-        workout.setDayNumber(dto.dayNumber());
-
-        if (dto.workoutStatus() != null) {
-            workout.setStatus(dto.workoutStatus());
-        }
-
-        workout.setEstimatedDurationMinutes(dto.estimatedDurationMinutes());
-
-        if (dto.difficultyLevel() != null) {
-            workout.setDifficultyLevel(dto.difficultyLevel());
-        }
-
-        //Conversão de exercícios
-        List<WorkoutExercise> workoutExercises = dto.exercises().stream()
-                .map(exDto -> {
-                    Exercise exercise = exerciseRepository.findById(exDto.exerciseId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Exercício não encontrado com o id: " + exDto.exerciseId()));
-
-                    WorkoutExercise we = new WorkoutExercise();
-                    we.setId(exDto.id());
-                    we.setWorkout(workout);
-                    we.setExercise(exercise);
-                    we.setSets(exDto.sets());
-                    we.setRepsPerSet(exDto.repsPerSet());
-                    we.setWeight(exDto.weight());
-                    we.setRestSeconds(exDto.restSeconds());
-                    we.setOrderPosition(exDto.orderPosition());
-
-                    return we;
-                })
-                .collect(Collectors.toList());
-
-        workout.setWorkoutExercises(workoutExercises);
-
-        // Mantém timestamps se já existirem (em caso de atualizações)
-        workout.setCreatedAt(dto.createdAt());
-        workout.setUpdatedAt(dto.updatedAt());
-
-        return workout;
-    }
-
 }
