@@ -2,7 +2,7 @@ package com.musclebuilder.service;
 
 import com.musclebuilder.dto.LogExerciseRequest;
 import com.musclebuilder.dto.StartWorkoutRequest;
-import com.musclebuilder.dto.WorkoutLogResponse;
+import com.musclebuilder.dto.WorkoutLogResponseDTO;
 import com.musclebuilder.exception.ResourceNotFoundException;
 import com.musclebuilder.exception.UnauthorizedAccessException;
 import com.musclebuilder.model.*;
@@ -29,7 +29,7 @@ public class WorkoutLogService {
     private final GamificationService gamificationService;
 
     @Autowired
-    public WorkoutLogService (WorkoutLogRepository workoutLogRepository, UserRepository userRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository, GamificationService gamificationService) {
+    public WorkoutLogService(WorkoutLogRepository workoutLogRepository, UserRepository userRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository, GamificationService gamificationService) {
         this.workoutLogRepository = workoutLogRepository;
         this.userRepository = userRepository;
         this.workoutRepository = workoutRepository;
@@ -38,7 +38,7 @@ public class WorkoutLogService {
     }
 
     @Transactional
-    public WorkoutLogResponse startWorkout(Long userId, StartWorkoutRequest req) {
+    public WorkoutLogResponseDTO startWorkout(Long userId, StartWorkoutRequest req) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
@@ -54,11 +54,11 @@ public class WorkoutLogService {
         }
 
         WorkoutLog savedLog = workoutLogRepository.save(newLog);
-        return convertToResponse(savedLog);
+        return mapToResponseDTO(savedLog);
     }
 
     @Transactional
-    public WorkoutLogResponse logExercise(Long workoutLogId, Long userId, LogExerciseRequest req) {
+    public WorkoutLogResponseDTO logExercise(Long workoutLogId, Long userId, LogExerciseRequest req) {
         WorkoutLog workoutLog = workoutLogRepository.findById(workoutLogId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado"));
 
@@ -80,11 +80,11 @@ public class WorkoutLogService {
         workoutLog.addExerciseLog(newExerciseLog);
 
         WorkoutLog updatedLog = workoutLogRepository.save(workoutLog);
-        return convertToResponse(updatedLog);
+        return mapToResponseDTO(updatedLog);
     }
 
     @Transactional
-    public WorkoutLogResponse completeWorkout(Long workoutLogId, Long userId) {
+    public WorkoutLogResponseDTO completeWorkout(Long workoutLogId, Long userId) {
         WorkoutLog workoutLog = workoutLogRepository.findById(workoutLogId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado"));
 
@@ -99,11 +99,11 @@ public class WorkoutLogService {
         //Após a conclusão do treino, o serviço de gamificação é chamado.
         gamificationService.checkAndAwardAchievements(userId);
 
-        return convertToResponse(completedLog);
+        return mapToResponseDTO(completedLog);
     }
 
     @Transactional(readOnly = true)
-    public WorkoutLogResponse getWorkoutLog(Long workoutLogId, Long userId) {
+    public WorkoutLogResponseDTO getWorkoutLog(Long workoutLogId, Long userId) {
         WorkoutLog workoutLog = workoutLogRepository.findByIdWithExerciseLogs(workoutLogId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado com id: " + workoutLogId));
 
@@ -111,50 +111,49 @@ public class WorkoutLogService {
             throw new UnauthorizedAccessException("Você não tem permissão para visualizar esse registro de treino");
         }
 
-        return convertToResponse(workoutLog);
+        return mapToResponseDTO(workoutLog);
     }
 
     @Transactional(readOnly = true)
-    public List<WorkoutLogResponse> getAllUserWorkoutLogs(Long userId) {
+    public List<WorkoutLogResponseDTO> getAllUserWorkoutLogs(Long userId) {
         List<WorkoutLog> logs = workoutLogRepository.findByUserIdWithExerciseLogs(userId);
 
         return logs.stream()
-                    .map(this::convertToResponse)
-                    .collect(Collectors.toList());
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    private WorkoutLogResponse convertToResponse(WorkoutLog log) {
-        //Converte a lista de entidades ExerciseLog para uma lista de DTOs ExerciseLogDetails
-        List<WorkoutLogResponse.ExerciseLogDetails> exerciseDetails = log.getExerciseLogs()
-                .stream()
-                .map(exerciseLog -> new WorkoutLogResponse.ExerciseLogDetails(
-                        exerciseLog.getId(),
-                        exerciseLog.getExercise().getId(),
-                        exerciseLog.getExercise().getName(),
-                        exerciseLog.getSetsCompleted(),
-                        exerciseLog.getRepsPerSet(),
-                        exerciseLog.getWeightUsed(),
-                        exerciseLog.getNotes()
-                ))
+    private WorkoutLogResponseDTO mapToResponseDTO(WorkoutLog workoutLog) {
+        Workout workoutTemplate = workoutLog.getWorkout();
+
+        List<WorkoutLogResponseDTO.ExerciseLogResponseDTO> exerciseLogDTOs = workoutLog.getExerciseLogs().stream()
+                .map(log -> {
+                    WorkoutExercise templateExercise = workoutTemplate.getWorkoutExercises().stream()
+                            .filter(we -> we.getExercise().getId().equals(log.getExercise().getId()))
+                            .findFirst()
+                            .orElse(null);
+
+                    return new WorkoutLogResponseDTO.ExerciseLogResponseDTO(
+                            log.getId(),
+                            log.getExerciseName(),
+                            templateExercise != null ? templateExercise.getSets() : null,
+                            templateExercise != null ? templateExercise.getRepsPerSet() : null,
+                            log.getSetsCompleted(),
+                            log.getRepsPerSet(),
+                            log.getWeightUsed()
+                    );
+                })
                 .collect(Collectors.toList());
 
-        //Calcula a duração do treino em minutos
-        //Checa primeiro se o treino já foi completado com nullCheck do completedAt
-        Long duration = null;
-        if (log.getCompletedAt() != null) {
-            duration = Duration.between(log.getStartedAt(), log.getCompletedAt()).toMinutes();
-        }
-
-        return new WorkoutLogResponse(
-                log.getId(),
-                log.getWorkoutName(),
-                log.getStatus(),
-                log.getStartedAt(),
-                log.getCompletedAt(),
-                duration,
-                log.getTotalVolume(),
-                exerciseDetails
+        return new WorkoutLogResponseDTO(
+                workoutLog.getId(),
+                workoutLog.getWorkoutName(),
+                workoutLog.getStatus(),
+                workoutLog.getStartedAt(),
+                workoutLog.getCompletedAt(),
+                workoutLog.getDurationMinutes(),
+                workoutLog.getTotalVolume(),
+                exerciseLogDTOs
         );
     }
-
 }
