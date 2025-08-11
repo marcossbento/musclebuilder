@@ -5,24 +5,26 @@ import com.musclebuilder.model.WorkoutLogStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record WorkoutLogResponse(
+public record WorkoutLogResponseDTO(
         Long id,
         String workoutName,
         WorkoutLogStatus status,
         LocalDateTime startedAt,
         LocalDateTime completedAt,
-        Long durationMinutes,
+        Integer durationMinutes,
         Double totalVolume,
-        List<ExerciseLogDetails> exerciseLogs
+        List<ExerciseLogResponseDTO> exerciseLogs
 ) {
     //Record aninhado para os detalhes de cada exercício registrado
-    public record ExerciseLogDetails(
+    public record ExerciseLogResponseDTO(
        Long id,
-       Long exerciseId,
        String exerciseName,
+
+       Integer targetSets,
+       Integer targetReps,
+
        Integer setsCompleted,
        String repsPerSet,
-       Double weightUsed,
-       String notes
+       Double weightUsed
     ) {}
 }
