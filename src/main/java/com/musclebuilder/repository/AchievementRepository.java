@@ -1,6 +1,7 @@
 package com.musclebuilder.repository;
 
 import com.musclebuilder.model.Achievement;
+import com.musclebuilder.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,8 +10,8 @@ import java.util.List;
 @Repository
 public interface AchievementRepository extends JpaRepository<Achievement, Long> {
 
-    List<Achievement> findByUserId(Long userId);
+    List<Achievement> findByUser(User user);
 
-    boolean existsByUserIdAndName(Long userId, String achievementName);
+    boolean existsByUserAndName(User user, String achievementName);
 
 }

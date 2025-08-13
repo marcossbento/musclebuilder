@@ -38,7 +38,7 @@ public class GamificationService {
     private void checkFirstWorkoutAchievement(User user) {
         final String achievementName = "Primeiro Treino";
 
-        if (!achievementRepository.existsByUserIdAndName(user.getId(), achievementName)) {
+        if (!achievementRepository.existsByUserAndName(user.getId(), achievementName)) {
             long completedWorkouts = workoutLogRepository.countByUserIdAndStatus(user.getId(), WorkoutLogStatus.COMPLETED);
             if (completedWorkouts >= 1) {
                 awardAchievement(user, achievementName, "Você completou seu primeiro treino. Bem-vindo à jornada!", "url_badge_1.png");
@@ -49,7 +49,7 @@ public class GamificationService {
     private void checkTotalVolumeAchievement(User user) {
         final String achievementName = "Clube dos 1000kg";
 
-        if (!achievementRepository.existsByUserIdAndName(user.getId(), achievementName)) {
+        if (!achievementRepository.existsByUserAndName(user.getId(), achievementName)) {
             double totalVolume = exerciseLogRepository.findTotalVolumeByUserId(user.getId());
             if (totalVolume >= 1000) {
                 awardAchievement(user, achievementName, "Você levantou mais de 1000kg no total! Incrível!", "/badges/volume_1000kg.png");

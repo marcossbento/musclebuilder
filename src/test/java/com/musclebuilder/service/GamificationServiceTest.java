@@ -51,7 +51,7 @@ public class GamificationServiceTest {
         //ARRANGE
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
-        when(achievementRepository.existsByUserIdAndName(1L, "Primeiro Treino")).thenReturn(false);
+        when(achievementRepository.existsByUserAndName(1L, "Primeiro Treino")).thenReturn(false);
 
         when(workoutLogRepository.countByUserIdAndStatus(1L, WorkoutLogStatus.COMPLETED)).thenReturn(1L);
 
@@ -69,7 +69,7 @@ public class GamificationServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
         //Neste teste simula que o user JÁ possui a conquista
-        when(achievementRepository.existsByUserIdAndName(1L, "Primeiro Treino")).thenReturn(true);
+        when(achievementRepository.existsByUserAndName(1L, "Primeiro Treino")).thenReturn(true);
 
         //ACT
         gamificationService.checkAndAwardAchievements(1L);
@@ -84,7 +84,7 @@ public class GamificationServiceTest {
 
         //ARRANGE
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(achievementRepository.existsByUserIdAndName(1L, "Primeiro Treino")).thenReturn(false);
+        when(achievementRepository.existsByUserAndName(1L, "Primeiro Treino")).thenReturn(false);
 
         when(workoutLogRepository.countByUserIdAndStatus(1L, WorkoutLogStatus.COMPLETED)).thenReturn(0L);
 
