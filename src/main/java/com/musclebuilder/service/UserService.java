@@ -8,6 +8,8 @@ import com.musclebuilder.model.User;
 import com.musclebuilder.repository.AchievementRepository;
 import com.musclebuilder.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
@@ -44,60 +47,45 @@ public class UserService {
         user.setGoal(userRegistrationDTO.goal());
 
         User savedUser = userRepository.save(user);
-        return convertToDTO(savedUser);
+        return mapToDTO(savedUser);
     }
 
-    public UserDTO getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + id));
-
-        return convertToDTO(user);
+    public UserDTO getCurrentUserDetails() {
+        User currentUser = findCurrentUser();
+        return mapToDTO(currentUser);
     }
 
+    @Transactional(readOnly = true)
+    public List<AchievementDTO> getCurrentUserAchievements() {
+        User currentUser = findCurrentUser();
+        List<Achievement> achievements = achievementRepository.findByUser(currentUser);
+
+        return achievements.stream()
+                .map(this::mapToAchievementDTO)
+                .collect(Collectors.toList());
+    }
+
+    /* MÉTODO ROLE-BASED PARA ADMIN TODO
     public UserDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com e-mail: " + email));
 
-        return convertToDTO(user);
+        return mapToDTO(user);
+    }
+    */
+
+    public UserDTO updateUserProfile(UserUpdateDTO userUpdateDTO) {
+        User userToUpdate = findCurrentUser();
+        userToUpdate.setName(userUpdateDTO.name());
+        userToUpdate.setHeight(userUpdateDTO.height());
+        userToUpdate.setWeight(userUpdateDTO.weight());
+        userToUpdate.setGoal(userUpdateDTO.goal());
+        User updatedUser = userRepository.save(userToUpdate);
+        return mapToDTO(updatedUser);
     }
 
-    public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<AchievementDTO> getUserAchievements(Long userId) {
-        List<Achievement> achievements = achievementRepository.findByUserId(userId);
-
-        return achievements.stream()
-                .map(achievement -> new AchievementDTO(
-                        achievement.getName(),
-                        achievement.getDescription(),
-                        achievement.getBadgeUrl(),
-                        achievement.getEarnedAt()
-                ))
-                .collect(Collectors.toList());
-    }
-
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + id));
-
-        user.setName(userDTO.name());
-        //atualização de e-mail e senha em métodos dedicados
-        user.setHeight(userDTO.height());
-        user.setWeight(userDTO.weight());
-        user.setGoal(userDTO.goal());
-
-        User updatedUser = userRepository.save(user);
-        return convertToDTO(updatedUser);
-    }
-
-    public UserDTO updateEmail(Long userId, EmailUpdateDTO emailUpdateDTO) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + userId));
+    public UserDTO updateEmail(EmailUpdateDTO emailUpdateDTO) {
+        User user = findCurrentUser();
 
         if (!passwordEncoder.matches(emailUpdateDTO.currentPassword(), user.getPassword())) {
             throw new UnauthorizedAccessException("Senha incorreta");
@@ -110,17 +98,15 @@ public class UserService {
         user.setEmail(emailUpdateDTO.newEmail());
         User updatedUser = userRepository.save(user);
 
-        return convertToDTO(updatedUser);
+        return mapToDTO(updatedUser);
     }
 
-    public void updatePassword(Long userId, PasswordUpdateDTO passwordUpdateDTO) {
+    public void updatePassword(PasswordUpdateDTO passwordUpdateDTO) {
         if (!passwordUpdateDTO.newPassword().equals(passwordUpdateDTO.confirmPassword())) {
             throw new IllegalArgumentException("As senhas não correspondem");
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + userId));
-
+        User user = findCurrentUser();
         if (!passwordEncoder.matches(passwordUpdateDTO.currentPassword(), user.getPassword())) {
             throw new UnauthorizedAccessException("Senha atual incorreta");
         }
@@ -129,15 +115,26 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Usuário não encontrado com id: " + id);
-        }
-
-        userRepository.deleteById(id);
+    public void deleteCurrentUser() {
+        User userToDelete = findCurrentUser();
+        userRepository.delete(userToDelete);
     }
 
-    private UserDTO convertToDTO(User user) {
+    // MÉTODOS AUXILIARES
+
+    public User findCurrentUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String username;
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails) principal).getUsername();
+        } else {
+            username = principal.toString();
+        }
+        return  userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário autenticado não encontrado com o email: " + username));
+    }
+
+    private UserDTO mapToDTO(User user) {
         return new UserDTO(
                 user.getId(),
                 user.getName(),
@@ -145,6 +142,15 @@ public class UserService {
                 user.getHeight(),
                 user.getWeight(),
                 user.getGoal()
+        );
+    }
+
+    private AchievementDTO mapToAchievementDTO(Achievement achievement) {
+        return new AchievementDTO(
+                achievement.getName(),
+                achievement.getDescription(),
+                achievement.getBadgeUrl(),
+                achievement.getEarnedAt()
         );
     }
 

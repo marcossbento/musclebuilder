@@ -1,20 +1,17 @@
 package com.musclebuilder.controller;
 
 import com.musclebuilder.dto.*;
-import com.musclebuilder.model.Achievement;
 import com.musclebuilder.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
 
     private final UserService userService;
@@ -24,12 +21,52 @@ public class UserController {
         this.userService = userService;
     }
 
+    // == ENDPOINTS PÚBLICOS
     @PostMapping("/register")
     public ResponseEntity<UserDTO> registerUser(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO) {
         UserDTO savedUser = userService.registerUser(userRegistrationDTO);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
 
+    // == ENDPOINTS AUTENTICADOS
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getCurrenUserDetails() {
+        UserDTO user = userService.getCurrentUserDetails();
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDTO> updateCurrentUserProfile(@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
+        UserDTO updatedUser = userService.updateUserProfile(userUpdateDTO);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @GetMapping("/me/achievements")
+    public ResponseEntity<List<AchievementDTO>> getCurrentUserAchievements() {
+        List<AchievementDTO> achievements = userService.getCurrentUserAchievements();
+
+        return ResponseEntity.ok(achievements);
+    }
+
+    @PatchMapping("/me/email")
+    public ResponseEntity<UserDTO> updateCurrentUserEmail(@Valid @RequestBody EmailUpdateDTO emailUpdateDTO) {
+        UserDTO updatedUser = userService.updateEmail(emailUpdateDTO);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> updateCurrentUserPassword(@Valid @RequestBody PasswordUpdateDTO passwordUpdateDTO) {
+        userService.updatePassword(passwordUpdateDTO);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteCurrentUser() {
+        userService.deleteCurrentUser();
+        return ResponseEntity.noContent().build();
+    }
+
+    /*TODO Endpoint ROLE-BASED ADMIN
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         UserDTO user = userService.getUserById(id);
@@ -41,37 +78,5 @@ public class UserController {
         List<UserDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
-
-    @GetMapping("/me/achievements")
-    public ResponseEntity<List<AchievementDTO>> getCurrentUserAchievements(Authentication authentication) {
-        String userEmail = authentication.getName();
-
-        List<AchievementDTO> achievements = userService.getUserAchievements(userService.getUserByEmail(userEmail).id());
-
-        return ResponseEntity.ok(achievements);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
-        UserDTO updatedUser = userService.updateUser(id, userDTO);
-        return ResponseEntity.ok(updatedUser);
-    }
-
-    @PatchMapping("/{id}/email")
-    public ResponseEntity<UserDTO> updateEmail(@PathVariable Long id, @Valid @RequestBody EmailUpdateDTO emailUpdateDTO) {
-        UserDTO updatedUser = userService.updateEmail(id, emailUpdateDTO);
-        return ResponseEntity.ok(updatedUser);
-    }
-
-    @PatchMapping("/{id}/password")
-    public ResponseEntity<Void> updatePassword(@PathVariable Long id, @Valid @RequestBody PasswordUpdateDTO passwordUpdateDTO) {
-        userService.updatePassword(id, passwordUpdateDTO);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
-    }
+    */
 }
