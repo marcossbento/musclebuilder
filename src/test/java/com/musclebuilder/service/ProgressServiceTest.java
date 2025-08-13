@@ -28,7 +28,7 @@ public class ProgressServiceTest {
     private final Long testUserId = 1L;
 
     @Test
-    void quandoGetGlobalSummary_deveRetornarResumoCorreto() {
+    void quandoGetSummary_ForUser_deveRetornarResumoCorreto() {
         //ARRANGE
         when(workoutLogRepository.countByUserIdAndStatus(testUserId, WorkoutLogStatus.COMPLETED))
                 .thenReturn(15L);
@@ -40,7 +40,7 @@ public class ProgressServiceTest {
                 .thenReturn("Supino Reto");
 
         //ACT
-        ProgressSummaryDTO summary = progressService.getGlobalSummary(testUserId);
+        ProgressSummaryDTO summary = progressService.getSummaryForUser(testUserId);
 
         //ASSERT
         assertThat(summary).isNotNull();
@@ -50,7 +50,7 @@ public class ProgressServiceTest {
     }
 
     @Test
-    void quandoNaoHaDados_getGlobalSummary_deveRetornarValoresPadrao() {
+    void quandoNaoHaDados_getSummary_ForUser_deveRetornarValoresPadrao() {
 
         //ARRANGE
         when(workoutLogRepository.countByUserIdAndStatus(testUserId, WorkoutLogStatus.COMPLETED))
@@ -61,7 +61,7 @@ public class ProgressServiceTest {
                 .thenReturn(null);;
 
         //ACT
-        ProgressSummaryDTO summary = progressService.getGlobalSummary(testUserId);
+        ProgressSummaryDTO summary = progressService.getSummaryForUser(testUserId);
 
         //ASSERT
         assertThat(summary).isNotNull();

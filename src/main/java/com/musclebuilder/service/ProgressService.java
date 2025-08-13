@@ -3,6 +3,7 @@ package com.musclebuilder.service;
 import com.musclebuilder.dto.ExerciseProgressDTO;
 import com.musclebuilder.dto.ProgressSummaryDTO;
 import com.musclebuilder.model.ExerciseLog;
+import com.musclebuilder.model.User;
 import com.musclebuilder.model.WorkoutLogStatus;
 import com.musclebuilder.repository.ExerciseLogRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
@@ -26,16 +27,19 @@ public class ProgressService {
         this.exerciseLogRepository = exerciseLogRepository;
     }
 
-    public ProgressSummaryDTO getGlobalSummary(Long userId) {
-        long totalWorkouts = workoutLogRepository.countByUserIdAndStatus(userId, WorkoutLogStatus.COMPLETED);
-        double totalVolume = exerciseLogRepository.findTotalVolumeByUserId(userId);
-        String mostFrequentExercise = exerciseLogRepository.findMostFrequentExerciseByUserId(userId);
+    public ProgressSummaryDTO getSummaryForUser(User user) {
+        long totalWorkouts = workoutLogRepository.countByUserAndStatus(user, WorkoutLogStatus.COMPLETED);
+        Double totalVolume = exerciseLogRepository.findTotalVolumeByUser(user);
+        String mostFrequentExercise = exerciseLogRepository.findMostFrequentExerciseByUser(user);
 
-        return new ProgressSummaryDTO(totalWorkouts, totalVolume, mostFrequentExercise);
+        return new ProgressSummaryDTO(
+                totalWorkouts,
+                totalVolume != null ? totalVolume : 0.0,
+                mostFrequentExercise);
     }
 
-    public List<ExerciseProgressDTO> getExerciseHistory(Long userId, Long exerciseId) {
-        List<ExerciseLog> history = exerciseLogRepository.findExerciseHistory(userId, exerciseId);
+    public List<ExerciseProgressDTO> getExerciseHistoryForUser(User user, Long exerciseId) {
+        List<ExerciseLog> history = exerciseLogRepository.findExerciseHistoryForUser(user, exerciseId);
 
         //converte a lista de entidades de log para a lista de DTOs de progresso
         return history.stream()
