@@ -29,17 +29,14 @@ public class ProgressController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<ProgressSummaryDTO> getSummary(Authentication authentication) {
-        User currentUser = userService.findCurrentUser();
-        ProgressSummaryDTO summary = progressService.getSummaryForUser(user);
+    public ResponseEntity<ProgressSummaryDTO> getSummary() {
+        ProgressSummaryDTO summary = progressService.getSummaryForCurrentUser();
         return ResponseEntity.ok(summary);
     }
 
     @GetMapping("/exercises/{exerciseId}")
     public ResponseEntity<List<ExerciseProgressDTO>> getExerciseProgress(@PathVariable Long exerciseId, Authentication authentication) {
-
-        User currentUser = userService.findCurrentUser();
-        List<ExerciseProgressDTO> history = progressService.getExerciseHistoryForUser(user, exerciseId);
+        List<ExerciseProgressDTO> history = progressService.getExerciseHistoryForUser(exerciseId);
         return ResponseEntity.ok(history);
     }
 }

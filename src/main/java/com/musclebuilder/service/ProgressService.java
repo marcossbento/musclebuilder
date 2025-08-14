@@ -20,17 +20,20 @@ public class ProgressService {
 
     private final WorkoutLogRepository workoutLogRepository;
     private final ExerciseLogRepository exerciseLogRepository;
+    private final UserService userService;
 
     @Autowired
-    public ProgressService(WorkoutLogRepository workoutLogRepository, ExerciseLogRepository exerciseLogRepository) {
+    public ProgressService(WorkoutLogRepository workoutLogRepository, ExerciseLogRepository exerciseLogRepository, UserService userService) {
         this.workoutLogRepository = workoutLogRepository;
         this.exerciseLogRepository = exerciseLogRepository;
+        this.userService = userService;
     }
 
-    public ProgressSummaryDTO getSummaryForUser(User user) {
-        long totalWorkouts = workoutLogRepository.countByUserAndStatus(user, WorkoutLogStatus.COMPLETED);
-        Double totalVolume = exerciseLogRepository.findTotalVolumeByUser(user);
-        String mostFrequentExercise = exerciseLogRepository.findMostFrequentExerciseByUser(user);
+    public ProgressSummaryDTO getSummaryForCurrentUser() {
+        User currentUser = userService.findCurrentUser();
+        long totalWorkouts = workoutLogRepository.countByUserAndStatus(currentUser, WorkoutLogStatus.COMPLETED);
+        Double totalVolume = exerciseLogRepository.findTotalVolumeByUser(currentUser);
+        String mostFrequentExercise = exerciseLogRepository.findMostFrequentExerciseByUser(currentUser);
 
         return new ProgressSummaryDTO(
                 totalWorkouts,
@@ -38,8 +41,9 @@ public class ProgressService {
                 mostFrequentExercise);
     }
 
-    public List<ExerciseProgressDTO> getExerciseHistoryForUser(User user, Long exerciseId) {
-        List<ExerciseLog> history = exerciseLogRepository.findExerciseHistoryForUser(user, exerciseId);
+    public List<ExerciseProgressDTO> getExerciseHistoryForUser(Long exerciseId) {
+        User currentUser = userService.findCurrentUser();
+        List<ExerciseLog> history = exerciseLogRepository.findExerciseHistoryForUser(currentUser, exerciseId);
 
         //converte a lista de entidades de log para a lista de DTOs de progresso
         return history.stream()

@@ -22,28 +22,26 @@ import java.util.stream.Collectors;
 public class WorkoutLogService {
 
     private final WorkoutLogRepository workoutLogRepository;
-    private final UserRepository userRepository;
     private final WorkoutRepository workoutRepository;
     private final ExerciseRepository exerciseRepository;
-
     private final GamificationService gamificationService;
+    private final UserService userService;
 
     @Autowired
-    public WorkoutLogService(WorkoutLogRepository workoutLogRepository, UserRepository userRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository, GamificationService gamificationService) {
+    public WorkoutLogService(WorkoutLogRepository workoutLogRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository, GamificationService gamificationService, UserService userService) {
         this.workoutLogRepository = workoutLogRepository;
-        this.userRepository = userRepository;
         this.workoutRepository = workoutRepository;
         this.exerciseRepository = exerciseRepository;
         this.gamificationService = gamificationService;
+        this.userService = userService;
     }
 
     @Transactional
-    public WorkoutLogResponseDTO startWorkout(Long userId, StartWorkoutRequest req) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+    public WorkoutLogResponseDTO startWorkout(StartWorkoutRequest req) {
+        User currentUser = userService.findCurrentUser();
 
         WorkoutLog newLog = new WorkoutLog();
-        newLog.setUser(user);
+        newLog.setUser(currentUser);
         newLog.setWorkoutName(req.workoutName());
         newLog.setStatus(WorkoutLogStatus.IN_PROGRESS);
 
@@ -58,11 +56,13 @@ public class WorkoutLogService {
     }
 
     @Transactional
-    public WorkoutLogResponseDTO logExercise(Long workoutLogId, Long userId, LogExerciseRequest req) {
+    public WorkoutLogResponseDTO logExercise(Long workoutLogId, LogExerciseRequest req) {
+        User currentUser = userService.findCurrentUser();
+
         WorkoutLog workoutLog = workoutLogRepository.findById(workoutLogId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado"));
 
-        if (!workoutLog.getUser().getId().equals(userId)) {
+        if (!workoutLog.getUser().equals(currentUser)) {
             throw new UnauthorizedAccessException("Você não tem permissão para alterar esse registro");
         }
 
@@ -84,11 +84,13 @@ public class WorkoutLogService {
     }
 
     @Transactional
-    public WorkoutLogResponseDTO completeWorkout(Long workoutLogId, Long userId) {
+    public WorkoutLogResponseDTO completeWorkout(Long workoutLogId) {
+        User currentUser = userService.findCurrentUser();
+
         WorkoutLog workoutLog = workoutLogRepository.findById(workoutLogId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado"));
 
-        if (!workoutLog.getUser().getId().equals(userId)) {
+        if (!workoutLog.getUser().equals(currentUser)) {
             throw new UnauthorizedAccessException("Você não tem permissão para alterar este registro");
         }
 
@@ -97,26 +99,25 @@ public class WorkoutLogService {
         WorkoutLog completedLog = workoutLogRepository.save(workoutLog);
 
         //Após a conclusão do treino, o serviço de gamificação é chamado.
-        gamificationService.checkAndAwardAchievements(userId);
+        gamificationService.checkAndAwardAchievements();
 
         return mapToResponseDTO(completedLog);
     }
 
     @Transactional(readOnly = true)
-    public WorkoutLogResponseDTO getWorkoutLog(Long workoutLogId, Long userId) {
-        WorkoutLog workoutLog = workoutLogRepository.findByIdWithExerciseLogs(workoutLogId)
-                .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado com id: " + workoutLogId));
+    public WorkoutLogResponseDTO getWorkoutLog(Long workoutLogId) {
+        User currentUser = userService.findCurrentUser();
 
-        if (!workoutLog.getUser().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("Você não tem permissão para visualizar esse registro de treino");
-        }
+        WorkoutLog workoutLog = workoutLogRepository.findByIdAndUserWithExerciseLogs(workoutLogId, currentUser)
+                .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado com id: " + workoutLogId));
 
         return mapToResponseDTO(workoutLog);
     }
 
     @Transactional(readOnly = true)
-    public List<WorkoutLogResponseDTO> getAllUserWorkoutLogs(Long userId) {
-        List<WorkoutLog> logs = workoutLogRepository.findByUserIdWithExerciseLogs(userId);
+    public List<WorkoutLogResponseDTO> getAllUserWorkoutLogs() {
+        User currentUser = userService.findCurrentUser();
+        List<WorkoutLog> logs = workoutLogRepository.findByUserWithExerciseLogs(currentUser);
 
         return logs.stream()
                 .map(this::mapToResponseDTO)

@@ -29,45 +29,33 @@ public class WorkoutLogController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<WorkoutLogResponseDTO> startWorkout(@Valid @RequestBody StartWorkoutRequest request, Authentication authentication) {
-        Long userId = getUserIdFromAuthentication(authentication);
-        WorkoutLogResponseDTO response = workoutLogService.startWorkout(userId, request);
+    public ResponseEntity<WorkoutLogResponseDTO> startWorkout(@Valid @RequestBody StartWorkoutRequest request) {
+        WorkoutLogResponseDTO response = workoutLogService.startWorkout(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     //Adiciona um exercício a um registro de treino existente
     @PostMapping("/{logId}/exercises")
-    public ResponseEntity<WorkoutLogResponseDTO> logExercise(@PathVariable Long logId, @Valid @RequestBody LogExerciseRequest request, Authentication authentication) {
-        Long userId = getUserIdFromAuthentication(authentication);
-        WorkoutLogResponseDTO response = workoutLogService.logExercise(logId, userId, request);
+    public ResponseEntity<WorkoutLogResponseDTO> logExercise(@PathVariable Long logId, @Valid @RequestBody LogExerciseRequest request) {
+        WorkoutLogResponseDTO response = workoutLogService.logExercise(logId, request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{logId}/complete")
-    public ResponseEntity<WorkoutLogResponseDTO> completeWorkout(@PathVariable Long logId, Authentication authentication) {
-        Long userId = getUserIdFromAuthentication(authentication);
-        WorkoutLogResponseDTO response = workoutLogService.completeWorkout(logId, userId);
+    public ResponseEntity<WorkoutLogResponseDTO> completeWorkout(@PathVariable Long logId) {
+        WorkoutLogResponseDTO response = workoutLogService.completeWorkout(logId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{logId}")
-    public ResponseEntity<WorkoutLogResponseDTO> getWorkoutLog(@PathVariable Long logId, Authentication authentication) {
-        Long userId = getUserIdFromAuthentication(authentication);
-        WorkoutLogResponseDTO response = workoutLogService.getWorkoutLog(logId, userId);
+    public ResponseEntity<WorkoutLogResponseDTO> getWorkoutLog(@PathVariable Long logId) {
+        WorkoutLogResponseDTO response = workoutLogService.getWorkoutLog(logId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<WorkoutLogResponseDTO>> getAllUserWorkoutLogs(Authentication authentication) {
-        Long userId = getUserIdFromAuthentication(authentication);
-        List<WorkoutLogResponseDTO> response = workoutLogService.getAllUserWorkoutLogs(userId);
+    public ResponseEntity<List<WorkoutLogResponseDTO>> getAllUserWorkoutLogs() {
+        List<WorkoutLogResponseDTO> response = workoutLogService.getAllUserWorkoutLogs();
         return ResponseEntity.ok(response);
     }
-
-    private Long getUserIdFromAuthentication(Authentication authentication) {
-        String userEmail = authentication.getName();
-
-        return userService.getUserByEmail(userEmail).id();
-    }
-
 }

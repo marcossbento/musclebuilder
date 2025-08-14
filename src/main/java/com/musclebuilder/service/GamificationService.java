@@ -16,30 +16,30 @@ public class GamificationService {
     private final AchievementRepository achievementRepository;
     private final UserRepository userRepository;
     private final WorkoutLogRepository workoutLogRepository;
-
     private final ExerciseLogRepository exerciseLogRepository;
+    private final UserService userService;
 
     @Autowired
-    public GamificationService(AchievementRepository achievementRepository, UserRepository userRepository, WorkoutLogRepository workoutLogRepository, ExerciseLogRepository exerciseLogRepository) {
+    public GamificationService(AchievementRepository achievementRepository, UserRepository userRepository, WorkoutLogRepository workoutLogRepository, ExerciseLogRepository exerciseLogRepository, UserService userService) {
         this.achievementRepository = achievementRepository;
         this.userRepository = userRepository;
         this.workoutLogRepository = workoutLogRepository;
         this.exerciseLogRepository = exerciseLogRepository;
+        this.userService = userService;
     }
 
-    public void checkAndAwardAchievements(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalStateException("Usuário não pode ser nulo para checar conquistas."));
+    public void checkAndAwardAchievements() {
+        User currentUser = userService.findCurrentUser();
 
-        checkFirstWorkoutAchievement(user);
-        checkTotalVolumeAchievement(user);
+        checkFirstWorkoutAchievement(currentUser);
+        checkTotalVolumeAchievement(currentUser);
     }
 
     private void checkFirstWorkoutAchievement(User user) {
         final String achievementName = "Primeiro Treino";
 
-        if (!achievementRepository.existsByUserAndName(user.getId(), achievementName)) {
-            long completedWorkouts = workoutLogRepository.countByUserIdAndStatus(user.getId(), WorkoutLogStatus.COMPLETED);
+        if (!achievementRepository.existsByUserAndName(user, achievementName)) {
+            long completedWorkouts = workoutLogRepository.countByUserAndStatus(user, WorkoutLogStatus.COMPLETED);
             if (completedWorkouts >= 1) {
                 awardAchievement(user, achievementName, "Você completou seu primeiro treino. Bem-vindo à jornada!", "url_badge_1.png");
             }
@@ -49,8 +49,8 @@ public class GamificationService {
     private void checkTotalVolumeAchievement(User user) {
         final String achievementName = "Clube dos 1000kg";
 
-        if (!achievementRepository.existsByUserAndName(user.getId(), achievementName)) {
-            double totalVolume = exerciseLogRepository.findTotalVolumeByUserId(user.getId());
+        if (!achievementRepository.existsByUserAndName(user, achievementName)) {
+            double totalVolume = exerciseLogRepository.findTotalVolumeByUser(user);
             if (totalVolume >= 1000) {
                 awardAchievement(user, achievementName, "Você levantou mais de 1000kg no total! Incrível!", "/badges/volume_1000kg.png");
             }
