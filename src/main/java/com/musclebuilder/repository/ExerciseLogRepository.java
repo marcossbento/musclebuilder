@@ -19,6 +19,6 @@ public interface ExerciseLogRepository extends JpaRepository<ExerciseLog, Long> 
     @Query("SELECT SUM(el.volume) FROM ExerciseLog el WHERE el.workoutLog.user = :user")
     Double findTotalVolumeByUser(@Param("user") User user);
 
-    @Query("SELECT el.exerciseName FROM ExerciseLog el WHERE el.workoutLog.user = :user GROUP BY el.exerciseName ORDER BY COUNT(el.workoutName) DESC LIMIT 1")
+    @Query("SELECT el.exerciseName FROM ExerciseLog el WHERE el.workoutLog.user = :user GROUP BY el.exerciseName ORDER BY COUNT(el.exerciseName) DESC LIMIT 1")
     String findMostFrequentExerciseByUser(@Param("user") User user);
 }
