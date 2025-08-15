@@ -20,12 +20,10 @@ import java.util.List;
 public class ProgressController {
 
     private final ProgressService progressService;
-    private final UserService userService;
 
     @Autowired
-    public ProgressController(ProgressService progressService, UserService userService) {
+    public ProgressController(ProgressService progressService) {
         this.progressService = progressService;
-        this.userService = userService;
     }
 
     @GetMapping("/summary")

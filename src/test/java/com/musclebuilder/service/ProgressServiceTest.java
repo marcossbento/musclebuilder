@@ -1,9 +1,11 @@
 package com.musclebuilder.service;
 
 import com.musclebuilder.dto.ProgressSummaryDTO;
+import com.musclebuilder.model.User;
 import com.musclebuilder.model.WorkoutLogStatus;
 import com.musclebuilder.repository.ExerciseLogRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,25 +24,38 @@ public class ProgressServiceTest {
     @Mock
     private ExerciseLogRepository exerciseLogRepository;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private ProgressService progressService;
 
-    private final Long testUserId = 1L;
+    private User testUser;
+
+    @BeforeEach
+    void setUp() {
+        testUser = new User();
+        testUser.setId(1L);
+        testUser.setName("Usuário de Teste");
+        testUser.setEmail("teste@email.com");
+    }
 
     @Test
-    void quandoGetSummary_ForUser_deveRetornarResumoCorreto() {
+    void quandoGetSummaryForCurrentUser_deveRetornarResumoCorreto() {
         //ARRANGE
-        when(workoutLogRepository.countByUserIdAndStatus(testUserId, WorkoutLogStatus.COMPLETED))
+        when(userService.findCurrentUser()).thenReturn(testUser);
+
+        when(workoutLogRepository.countByUserAndStatus(testUser, WorkoutLogStatus.COMPLETED))
                 .thenReturn(15L);
 
-        when(exerciseLogRepository.findTotalVolumeByUserId(testUserId))
+        when(exerciseLogRepository.findTotalVolumeByUser(testUser))
                 .thenReturn(12500.5);
 
-        when(exerciseLogRepository.findMostFrequentExerciseByUserId(testUserId))
+        when(exerciseLogRepository.findMostFrequentExerciseByUser(testUser))
                 .thenReturn("Supino Reto");
 
         //ACT
-        ProgressSummaryDTO summary = progressService.getSummaryForUser(testUserId);
+        ProgressSummaryDTO summary = progressService.getSummaryForCurrentUser();
 
         //ASSERT
         assertThat(summary).isNotNull();
@@ -51,17 +66,18 @@ public class ProgressServiceTest {
 
     @Test
     void quandoNaoHaDados_getSummary_ForUser_deveRetornarValoresPadrao() {
-
         //ARRANGE
-        when(workoutLogRepository.countByUserIdAndStatus(testUserId, WorkoutLogStatus.COMPLETED))
+        when(userService.findCurrentUser()).thenReturn(testUser);
+
+        when(workoutLogRepository.countByUserAndStatus(testUser, WorkoutLogStatus.COMPLETED))
                 .thenReturn(0L);
-        when(exerciseLogRepository.findTotalVolumeByUserId(testUserId))
+        when(exerciseLogRepository.findTotalVolumeByUser(testUser))
                 .thenReturn(0.0);
-        when(exerciseLogRepository.findMostFrequentExerciseByUserId(testUserId))
+        when(exerciseLogRepository.findMostFrequentExerciseByUser(testUser))
                 .thenReturn(null);;
 
         //ACT
-        ProgressSummaryDTO summary = progressService.getSummaryForUser(testUserId);
+        ProgressSummaryDTO summary = progressService.getSummaryForCurrentUser();
 
         //ASSERT
         assertThat(summary).isNotNull();
