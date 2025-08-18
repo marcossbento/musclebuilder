@@ -41,7 +41,7 @@ public class ProgressService {
                 mostFrequentExercise);
     }
 
-    public List<ExerciseProgressDTO> getExerciseHistoryForUser(Long exerciseId) {
+    public List<ExerciseProgressDTO> getExerciseHistoryForCurrentUser(Long exerciseId) {
         User currentUser = userService.findCurrentUser();
         List<ExerciseLog> history = exerciseLogRepository.findExerciseHistoryForUser(currentUser, exerciseId);
 

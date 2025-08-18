@@ -2,9 +2,7 @@ package com.musclebuilder.controller;
 
 import com.musclebuilder.dto.ExerciseProgressDTO;
 import com.musclebuilder.dto.ProgressSummaryDTO;
-import com.musclebuilder.model.User;
 import com.musclebuilder.service.ProgressService;
-import com.musclebuilder.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -34,7 +32,7 @@ public class ProgressController {
 
     @GetMapping("/exercises/{exerciseId}")
     public ResponseEntity<List<ExerciseProgressDTO>> getExerciseProgress(@PathVariable Long exerciseId, Authentication authentication) {
-        List<ExerciseProgressDTO> history = progressService.getExerciseHistoryForUser(exerciseId);
+        List<ExerciseProgressDTO> history = progressService.getExerciseHistoryForCurrentUser(exerciseId);
         return ResponseEntity.ok(history);
     }
 }
