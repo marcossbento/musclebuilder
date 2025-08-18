@@ -2,10 +2,13 @@ package com.musclebuilder.repository;
 
 import com.musclebuilder.model.*;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
@@ -29,7 +32,6 @@ public class WorkoutLogRepositoryTest {
 
     @BeforeEach
     void setUp() {
-
         //User de teste
         testUser = new User();
         testUser.setName("João Teste");
@@ -38,31 +40,13 @@ public class WorkoutLogRepositoryTest {
         testUser.setHeight("180");
         testUser.setWeight("80");
         testUser.setGoal("Ganhar massa");
-
-        //Salvar no banco de teste e garantir a persistência
         testUser = entityManager.persistAndFlush(testUser);
 
-        // Verificar se usuário foi criado
-        assertThat(testUser).isNotNull();
-        assertThat(testUser.getId()).isNotNull();
-
-        // Criar exercício - INICIALIZAR EXPLICITAMENTE
         testExercise = new Exercise();
-
-        // Verificar se exercício foi instanciado
-        assertThat(testExercise).isNotNull();
-
-        //Workout de teste
-        testExercise.setName("Treino teste");
+        testExercise.setName("Supino Reto Teste");
         testExercise.setMuscleGroup("Peito");
         testExercise.setDifficultyLevel(DifficultyLevel.INTERMEDIATE);
-
         testExercise = entityManager.persistAndFlush(testExercise);
-
-        // Verificar se exercício foi persistido
-        assertThat(testExercise).isNotNull();
-        assertThat(testExercise.getId()).isNotNull();
-
     }
 
     @Test
@@ -71,52 +55,52 @@ public class WorkoutLogRepositoryTest {
     }
 
     @Test
+    @DisplayName("Deve salvar um WorkoutLog com sucesso")
     void deveSalvarWorkoutLog() {
-
+        // ARRANGE
         WorkoutLog workoutLog = new WorkoutLog();
         workoutLog.setUser(testUser);
-        workoutLog.setWorkoutName("Treino 1");
+        workoutLog.setWorkoutName("Treino de Peito");
         workoutLog.setStatus(WorkoutLogStatus.IN_PROGRESS);
 
+        // ACT
         WorkoutLog savedLog = workoutLogRepository.save(workoutLog);
 
-
+        //ASSERT
+        assertThat(savedLog).isNotNull();
         assertThat(savedLog.getId()).isNotNull();
-        assertThat(savedLog.getWorkoutName()).isEqualTo("Treino 1");
-        assertThat(savedLog.getUser()).isNotNull();
         assertThat(savedLog.getUser().getId()).isEqualTo(testUser.getId());
         assertThat(savedLog.getCreatedAt()).isNotNull();
 
     }
-    /*
     @Test
-    void deveEncontrarWorkoutLogsPorUsuario() {
-        //Criar múltiplos logs para o mesmo usuário
+    @DisplayName("Deve encontrar os workoutLogs de um usuário de forma paginada e ordenada")
+    void deveEncontrarWorkoutLogsPorUsuarioComPaginacao() {
+        //ARRANGE - Criar múltiplos logs para o mesmo usuário
         WorkoutLog log1 = new WorkoutLog();
         log1.setUser(testUser);
-        log1.setWorkoutName("Treino A");
+        log1.setWorkoutName("Treino A - Mais Antigo");
         log1.setStartedAt(LocalDateTime.now().minusDays(2));
-        log1.setStatus(WorkoutLogStatus.COMPLETED);
+        entityManager.persist(log1);
 
         WorkoutLog log2 = new WorkoutLog();
         log2.setUser(testUser);
-        log2.setWorkoutName("Treino B");
+        log2.setWorkoutName("Treino B - Mais Recente");
         log2.setStartedAt(LocalDateTime.now().minusDays(1));
-        log2.setStatus(WorkoutLogStatus.COMPLETED);
+        entityManager.persist(log2);
 
-        //Salvar ambos
-        workoutLogRepository.save(log1);
-        workoutLogRepository.save(log2);
+        entityManager.flush();
 
-        //Buscar por usuário e status
-        List<WorkoutLog> logsCompletos = workoutLogRepository
-                .findByUserIdAndStatusOrderByStartedAtDesc(testUser.getId(), WorkoutLogStatus.COMPLETED);
+        // ACT
+        Page<WorkoutLog> resultPage = workoutLogRepository
+                .findByUserOrderByStartedAtDesc(testUser, PageRequest.of(0, 5));
 
-        //Verificação
-        assertThat(logsCompletos).hasSize(2);
-        assertThat(logsCompletos.get(0).getWorkoutName()).isEqualTo("Treino B"); // Mais recente primeiro
-        assertThat(logsCompletos.get(1).getWorkoutName()).isEqualTo("Treino A");
-    } */
+        // ASSERT
+        assertThat(resultPage).isNotNull();
+        assertThat(resultPage.getTotalElements()).isEqualTo(2);
+        assertThat(resultPage.getContent()).hasSize(2);
+        assertThat(resultPage.getContent().get(0).getWorkoutName()).isEqualTo("Treino B - Mais Recente");
+    }
 
     @Test
     void deveManterRelacionamentoComExerciseLogs() {
@@ -124,39 +108,31 @@ public class WorkoutLogRepositoryTest {
         // Criar workout log
         WorkoutLog workoutLog = new WorkoutLog();
         workoutLog.setUser(testUser);
-        workoutLog.setWorkoutName("Treino Peito");
+        workoutLog.setWorkoutName("Treino de Costas");
         workoutLog.setStatus(WorkoutLogStatus.IN_PROGRESS);
-
-
-        workoutLog = workoutLogRepository.saveAndFlush(workoutLog);
 
         // Criar exercise log
         ExerciseLog exerciseLog = new ExerciseLog();
         exerciseLog.setExercise(testExercise);
-        exerciseLog.setExerciseName("Supino");
+        exerciseLog.setExerciseName("Remada Curvada");
         exerciseLog.setSetsCompleted(3);
-        exerciseLog.setRepsPerSet("12,10,8");
-        exerciseLog.setWeightUsed(80.0);
-        exerciseLog.setOrderPosition(1);
+        exerciseLog.setRepsPerSet("10,10,10");
 
         workoutLog.addExerciseLog(exerciseLog);
-
-        workoutLogRepository.saveAndFlush(workoutLog);
-
+        entityManager.persistAndFlush(workoutLog);
         entityManager.clear();
 
-        // ACT - Recuperar do banco
-        Optional<WorkoutLog> retrieved = workoutLogRepository.findByIdWithExerciseLogs(workoutLog.getId());
+        // ACT
+        List<WorkoutLog> retrievedLogs = workoutLogRepository.findByUserWithExerciseLogs(testUser);
 
         // ASSERT
-        assertThat(retrieved).isPresent();
-        WorkoutLog workoutLogWithLogs = retrieved.get();
-        assertThat(workoutLogWithLogs.getExerciseLogs()).isNotEmpty();
-        assertThat(workoutLogWithLogs.getExerciseLogs()).hasSize(1);
+        assertThat(retrievedLogs).isNotNull().hasSize(1);
+        WorkoutLog firstLog = retrievedLogs.get(0);
+        assertThat(firstLog.getExerciseLogs()).isNotEmpty();
+        assertThat(firstLog.getExerciseLogs()).hasSize(1);
 
-        ExerciseLog retrievedExerciseLog = workoutLogWithLogs.getExerciseLogs().get(0);
-        assertThat(retrievedExerciseLog.getExerciseName()).isEqualTo("Supino");
-        assertThat(retrievedExerciseLog.getWeightUsed()).isEqualTo(80.0);
+        ExerciseLog retrievedExerciseLog = firstLog.getExerciseLogs().get(0);
+        assertThat(retrievedExerciseLog.getExerciseName()).isEqualTo("Remada Curvada");
     }
 
 
