@@ -10,60 +10,26 @@ import com.musclebuilder.repository.WorkoutLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 public class GamificationService {
 
-    private final AchievementRepository achievementRepository;
-    private final UserRepository userRepository;
-    private final WorkoutLogRepository workoutLogRepository;
-    private final ExerciseLogRepository exerciseLogRepository;
+    private final List<AchievementChecker> achievementCheckers;
     private final UserService userService;
 
     @Autowired
-    public GamificationService(AchievementRepository achievementRepository, UserRepository userRepository, WorkoutLogRepository workoutLogRepository, ExerciseLogRepository exerciseLogRepository, UserService userService) {
-        this.achievementRepository = achievementRepository;
-        this.userRepository = userRepository;
-        this.workoutLogRepository = workoutLogRepository;
-        this.exerciseLogRepository = exerciseLogRepository;
+    public GamificationService(List<AchievementChecker> achievementCheckers, UserService userService) {
+        this.achievementCheckers = achievementCheckers;
         this.userService = userService;
     }
 
     public void checkAndAwardAchievements() {
         User currentUser = userService.findCurrentUser();
 
-        checkFirstWorkoutAchievement(currentUser);
-        checkTotalVolumeAchievement(currentUser);
-    }
-
-    private void checkFirstWorkoutAchievement(User user) {
-        final String achievementName = "Primeiro Treino";
-
-        if (!achievementRepository.existsByUserAndName(user, achievementName)) {
-            long completedWorkouts = workoutLogRepository.countByUserAndStatus(user, WorkoutLogStatus.COMPLETED);
-            if (completedWorkouts >= 1) {
-                awardAchievement(user, achievementName, "Você completou seu primeiro treino. Bem-vindo à jornada!", "url_badge_1.png");
-            }
+        for (AchievementChecker checker : achievementCheckers) {
+            checker.check(currentUser);
         }
-    }
-
-    private void checkTotalVolumeAchievement(User user) {
-        final String achievementName = "Clube dos 1000kg";
-
-        if (!achievementRepository.existsByUserAndName(user, achievementName)) {
-            double totalVolume = exerciseLogRepository.findTotalVolumeByUser(user);
-            if (totalVolume >= 1000) {
-                awardAchievement(user, achievementName, "Você levantou mais de 1000kg no total! Incrível!", "/badges/volume_1000kg.png");
-            }
-        }
-    }
-
-    private void awardAchievement(User user, String name, String description, String badgeUrl) {
-        Achievement newAchievement = new Achievement();
-        newAchievement.setUser(user);
-        newAchievement.setName(name);
-        newAchievement.setDescription(description);
-        newAchievement.setBadgeUrl(badgeUrl);
-
-        achievementRepository.save(newAchievement);
     }
 }
