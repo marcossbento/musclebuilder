@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class GamificationService {
@@ -25,11 +27,13 @@ public class GamificationService {
         this.userService = userService;
     }
 
-    public void checkAndAwardAchievements() {
+    public List<Achievement> checkAndAwardAchievements() {
         User currentUser = userService.findCurrentUser();
 
-        for (AchievementChecker checker : achievementCheckers) {
-            checker.check(currentUser);
-        }
+        return achievementCheckers.stream()
+                .map(checker -> checker.check(currentUser))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
     }
 }

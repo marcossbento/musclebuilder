@@ -1,5 +1,6 @@
 package com.musclebuilder.controller;
 
+import com.musclebuilder.dto.CompleteWorkoutResponseDTO;
 import com.musclebuilder.dto.LogExerciseRequest;
 import com.musclebuilder.dto.StartWorkoutRequest;
 import com.musclebuilder.dto.WorkoutLogResponseDTO;
@@ -42,8 +43,8 @@ public class WorkoutLogController {
     }
 
     @PostMapping("/{logId}/complete")
-    public ResponseEntity<WorkoutLogResponseDTO> completeWorkout(@PathVariable Long logId) {
-        WorkoutLogResponseDTO response = workoutLogService.completeWorkout(logId);
+    public ResponseEntity<CompleteWorkoutResponseDTO> completeWorkout(@PathVariable Long logId) {
+        CompleteWorkoutResponseDTO response = workoutLogService.completeWorkout(logId);
         return ResponseEntity.ok(response);
     }
 

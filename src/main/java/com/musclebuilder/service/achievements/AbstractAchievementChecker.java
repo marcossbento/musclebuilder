@@ -18,7 +18,7 @@ public abstract class AbstractAchievementChecker {
         return achievementRepository.existsByUserAndName(user, name);
     }
 
-    protected void awardAchievement(User user, String name, String description, String badgeUrl) {
+    protected Achievement awardAchievement(User user, String name, String description, String badgeUrl) {
         Achievement newAchievement = new Achievement();
         newAchievement.setUser(user);
         newAchievement.setName(name);
@@ -26,6 +26,6 @@ public abstract class AbstractAchievementChecker {
         newAchievement.setBadgeUrl(badgeUrl);
         newAchievement.setEarnedAt(LocalDateTime.now());
 
-        achievementRepository.save(newAchievement);
+        return achievementRepository.save(newAchievement);
     }
 }

@@ -1,5 +1,6 @@
 package com.musclebuilder.service;
 
+import com.musclebuilder.dto.CompleteWorkoutResponseDTO;
 import com.musclebuilder.dto.LogExerciseRequest;
 import com.musclebuilder.dto.StartWorkoutRequest;
 import com.musclebuilder.dto.WorkoutLogResponseDTO;
@@ -84,7 +85,7 @@ public class WorkoutLogService {
     }
 
     @Transactional
-    public WorkoutLogResponseDTO completeWorkout(Long workoutLogId) {
+    public CompleteWorkoutResponseDTO completeWorkout(Long workoutLogId) {
         User currentUser = userService.findCurrentUser();
 
         WorkoutLog workoutLog = workoutLogRepository.findById(workoutLogId)
@@ -99,9 +100,11 @@ public class WorkoutLogService {
         WorkoutLog completedLog = workoutLogRepository.save(workoutLog);
 
         //Após a conclusão do treino, o serviço de gamificação é chamado.
-        gamificationService.checkAndAwardAchievements();
+        List<Achievement> newAchievements = gamificationService.checkAndAwardAchievements();
 
-        return mapToResponseDTO(completedLog);
+        WorkoutLogResponseDTO logDTO = mapToResponseDTO(completedLog);
+
+        return new CompleteWorkoutResponseDTO(logDTO, newAchievements);
     }
 
     @Transactional(readOnly = true)

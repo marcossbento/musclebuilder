@@ -1,11 +1,14 @@
 package com.musclebuilder.service.achievements;
 
+import com.musclebuilder.model.Achievement;
 import com.musclebuilder.model.User;
 import com.musclebuilder.model.WorkoutLogStatus;
 import com.musclebuilder.repository.AchievementRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
 import com.musclebuilder.service.AchievementChecker;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 public class FirstWorkoutAchievementChecker extends AbstractAchievementChecker implements AchievementChecker {
@@ -18,14 +21,17 @@ public class FirstWorkoutAchievementChecker extends AbstractAchievementChecker i
     }
 
     @Override
-    public void check(User user) {
+    public Optional<Achievement> check(User user) {
         final String achievementName = "Primeiro Treino";
 
         if (!hasAchievement(user, achievementName)) {
             long completedWorkouts = workoutLogRepository.countByUserAndStatus(user, WorkoutLogStatus.COMPLETED);
             if (completedWorkouts >= 1) {
-                awardAchievement(user, achievementName, "Você completou seu primeiro treino. Bem-vindo à jornada!", "url_badge_1.png");
+                Achievement awarded = awardAchievement(user, achievementName, "Você completou seu primeiro treino. Bem-vindo à jornada!", "url_badge_1.png");
+                return Optional.of(awarded);
             }
         }
+
+        return Optional.empty(); // Se não houver novas conquistas retorna vazio
     }
 }
