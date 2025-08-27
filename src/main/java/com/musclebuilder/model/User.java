@@ -3,6 +3,7 @@ package com.musclebuilder.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,14 @@ public class User {
     @JsonIgnore
     private List<Achievement> achievements = new ArrayList<>();
 
-    public User() {}
+    @Column(name = "experience_points", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long experiencePoints = 0L;
+
+    @Column(name = "user_level", nullable = false, columnDefinition = "INTEGER DEFAULT 1")
+    private Integer level = 1;
+
+    public User() {
+    }
 
     public User(final Long id, final String name, final String email, final String password, final String height, final String weight, final String goal, final LocalDateTime createdAt, final LocalDateTime updatedAt, final List<Achievement> achievements) {
         this.id = id;
@@ -134,6 +142,22 @@ public class User {
 
     public void setAchievements(final List<Achievement> achievements) {
         this.achievements = achievements;
+    }
+
+    public Long getExperiencePoints() {
+        return experiencePoints;
+    }
+
+    public void setExperiencePoints(Long experiencePoints) {
+        this.experiencePoints = experiencePoints;
+    }
+
+    public Integer getLevel() {
+        return level;
+    }
+
+    public void setLevel(Integer level) {
+        this.level = level;
     }
 
     @PrePersist
