@@ -96,14 +96,13 @@ public class WorkoutLogService {
         }
 
         workoutLog.completeWorkout();
-
         WorkoutLog completedLog = workoutLogRepository.save(workoutLog);
 
-        //Após a conclusão do treino, o serviço de gamificação é chamado.
+        //Após a conclusão do treino, o serviço de gamificação é chamado(Concede XP e conquistas).
+        gamificationService.awardXpForWorkout(currentUser, completedLog);
         List<Achievement> newAchievements = gamificationService.checkAndAwardAchievements();
 
         WorkoutLogResponseDTO logDTO = mapToResponseDTO(completedLog);
-
         return new CompleteWorkoutResponseDTO(logDTO, newAchievements);
     }
 
