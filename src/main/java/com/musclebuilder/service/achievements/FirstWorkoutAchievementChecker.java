@@ -27,7 +27,7 @@ public class FirstWorkoutAchievementChecker extends AbstractAchievementChecker i
         if (!hasAchievement(user, achievementName)) {
             long completedWorkouts = workoutLogRepository.countByUserAndStatus(user, WorkoutLogStatus.COMPLETED);
             if (completedWorkouts >= 1) {
-                Achievement awarded = awardAchievement(user, achievementName, "Você completou seu primeiro treino. Bem-vindo à jornada!", "url_badge_1.png");
+                Achievement awarded = awardAchievement(user, achievementName, "Você completou seu primeiro treino. Bem-vindo à jornada!", "assets/badges/badge_FirstWorkout.png");
                 return Optional.of(awarded);
             }
         }

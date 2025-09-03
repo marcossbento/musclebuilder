@@ -49,14 +49,24 @@ public class DashboardService {
     }
 
     private DashboardDTO.UserLevelDTO buildUserLevelDTO(User user) {
-        long xpForNext = gamificationService.getXpForLevel(user.getLevel() + 1);
-        double progress = (double) user.getExperiencePoints() / xpForNext * 100;
+        long xpForCurrentLevel = gamificationService.getTotalXpForLevel(user.getLevel());
+        long xpForNextLevel = gamificationService.getTotalXpForLevel(user.getLevel() + 1);
+
+        // Tamanho da barra XP = diferença entre o próximo nível e o atual.
+        long xpNeededInThisLevel = xpForNextLevel - xpForCurrentLevel;
+
+        long userProgressInThisLevel = user.getExperiencePoints() - xpForCurrentLevel;
+
+        double progressPercentage = 0;
+        if (xpNeededInThisLevel > 0) {
+            progressPercentage = ((double) userProgressInThisLevel / xpNeededInThisLevel) * 100;
+        }
 
         return new DashboardDTO.UserLevelDTO(
                 user.getLevel(),
-                user.getExperiencePoints(),
-                xpForNext,
-                progress
+                userProgressInThisLevel,
+                xpNeededInThisLevel,
+                progressPercentage
         );
     }
 

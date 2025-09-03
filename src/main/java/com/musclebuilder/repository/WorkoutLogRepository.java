@@ -25,6 +25,8 @@ public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, Long> {
 
     boolean existsByUserAndStatus(User user, WorkoutLogStatus status);
 
+    List<WorkoutLog> findByUserAndStatusOrderByCompletedAtDesc(User user, WorkoutLogStatus status);
+
     Optional<WorkoutLog> findFirstByUserAndStatusOrderByCompletedAtDesc(User user, WorkoutLogStatus status);
 
     @Query("SELECT wl FROM WorkoutLog wl LEFT JOIN FETCH wl.exerciseLogs WHERE wl.user = :user")

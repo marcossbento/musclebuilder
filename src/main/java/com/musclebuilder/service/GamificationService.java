@@ -4,16 +4,15 @@ import com.musclebuilder.model.Achievement;
 import com.musclebuilder.model.User;
 import com.musclebuilder.model.WorkoutLog;
 import com.musclebuilder.model.WorkoutLogStatus;
-import com.musclebuilder.repository.AchievementRepository;
-import com.musclebuilder.repository.ExerciseLogRepository;
-import com.musclebuilder.repository.UserRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +20,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class GamificationService {
+    private static final Logger logger = LoggerFactory.getLogger(GamificationService.class);
+
     // Constantes de XP distribuídos por ação do user
     private static final long XP_PER_WORKOUT = 100;
     private static final double XP_PER_VOLUME_UNIT = 0.5;
@@ -53,60 +54,64 @@ public class GamificationService {
             xpGained += (long) (workoutLog.getTotalVolume() * XP_PER_VOLUME_UNIT);
         }
 
+        logger.info("Concedendo {} XP para o usuário {}", xpGained, user.getEmail());
         user.setExperiencePoints(user.getExperiencePoints() + xpGained);
 
         checkLevelUp(user);
     }
 
     // Cálculo de XP necessário para próximo nível, resultado exponencial de acordo com o nível
-    public long getXpForLevel(int level) {
+    public long getTotalXpForLevel(int level) {
         if (level <= 1) {
-            return BASE_XP_FOR_NEXT_LEVEL;
+            return 0;
         }
-        return (long) (BASE_XP_FOR_NEXT_LEVEL * Math.pow(level, 1.5));
+        return (long) (500 * Math.pow(level - 1, 2) + 1000L * (level - 1));
     }
 
     public void checkLevelUp(User user) {
-        long xpForNextLevel = getXpForLevel(user.getLevel() + 1);
+        long xpNeededForNextLevel = getTotalXpForLevel(user.getLevel() + 1);
 
-        if (user.getExperiencePoints() >= xpForNextLevel) {
+        while (user.getExperiencePoints() >= xpNeededForNextLevel) {
             user.setLevel(user.getLevel() + 1);
-            // TODO: Conquita por subir de nível.
+
+            logger.info("PARABÉNS! {} subiu para o nível {}!", user.getName(), user.getLevel());
+
+            xpNeededForNextLevel = getTotalXpForLevel(user.getLevel() + 1);
         }
     }
 
     public int calculateWorkoutStreak(User user) {
-        List<WorkoutLog> logs = workoutLogRepository.findByUserOrderByStartedAtDesc(user, null).getContent();
+        List<WorkoutLog> completedLogs = workoutLogRepository.findByUserAndStatusOrderByCompletedAtDesc(user, WorkoutLogStatus.COMPLETED);
 
-        if (logs.isEmpty()) {
+        if (completedLogs.isEmpty()) {
             return 0;
         }
 
-        int streak = 0;
+        List<LocalDate> uniqueWorkoutDates = completedLogs.stream()
+                .map(log -> log.getCompletedAt().toLocalDate())
+                .distinct()
+                .collect(Collectors.toList());
+
         LocalDate today = LocalDate.now();
-        LocalDate startOfThisWeek = today.with(DayOfWeek.MONDAY);
+        LocalDate yesterday = today.minusDays(1);
+        LocalDate mostRecentWorkoutDate = uniqueWorkoutDates.get(0);
 
-        LocalDate lastWorkoutDate = logs.get(0).getStartedAt().toLocalDate();
-        if (lastWorkoutDate.isAfter(startOfThisWeek.minusDays(1)) || lastWorkoutDate.isEqual(startOfThisWeek.minusDays(1))) {
-            streak = 1;
-        } else if (lastWorkoutDate.isAfter(startOfThisWeek.minusWeeks(1).minusDays(1))) {
-            streak = 1;
-        } else {
+        if (!mostRecentWorkoutDate.isEqual(today) && !mostRecentWorkoutDate.isEqual(yesterday)) {
             return 0;
         }
 
-        for (int i = 1; i < logs.size(); i++) {
-            LocalDate currentWorkoutDate = logs.get(i-1).getStartedAt().toLocalDate();
-            LocalDate previousWorkoutDate = logs.get(i).getStartedAt().toLocalDate();
+        int streak = 1;
+        for (int i = 1; i < uniqueWorkoutDates.size(); i++) {
+            LocalDate currentDay = uniqueWorkoutDates.get(i - 1);
+            LocalDate previousDay = uniqueWorkoutDates.get(i);
 
-            long weeksBetween = ChronoUnit.WEEKS.between(previousWorkoutDate, currentWorkoutDate);
-
-            if (weeksBetween <= 1) {
+            if (previousDay.isEqual(currentDay.minusDays(1))) {
                 streak++;
             } else {
                 break;
             }
         }
+
         return streak;
     }
 }
