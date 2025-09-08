@@ -4,6 +4,7 @@ import com.musclebuilder.dto.CompleteWorkoutResponseDTO;
 import com.musclebuilder.dto.LogExerciseRequest;
 import com.musclebuilder.dto.StartWorkoutRequest;
 import com.musclebuilder.dto.WorkoutLogResponseDTO;
+import com.musclebuilder.event.WorkoutCompletedEvent;
 import com.musclebuilder.exception.ResourceNotFoundException;
 import com.musclebuilder.exception.UnauthorizedAccessException;
 import com.musclebuilder.model.*;
@@ -12,6 +13,7 @@ import com.musclebuilder.repository.UserRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
 import com.musclebuilder.repository.WorkoutRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +27,16 @@ public class WorkoutLogService {
     private final WorkoutLogRepository workoutLogRepository;
     private final WorkoutRepository workoutRepository;
     private final ExerciseRepository exerciseRepository;
-    private final GamificationService gamificationService;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public WorkoutLogService(WorkoutLogRepository workoutLogRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository, GamificationService gamificationService, UserService userService) {
+    public WorkoutLogService(WorkoutLogRepository workoutLogRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository, GamificationService gamificationService, UserService userService, ApplicationEventPublisher eventPublisher) {
         this.workoutLogRepository = workoutLogRepository;
         this.workoutRepository = workoutRepository;
         this.exerciseRepository = exerciseRepository;
-        this.gamificationService = gamificationService;
         this.userService = userService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -98,9 +100,10 @@ public class WorkoutLogService {
         workoutLog.completeWorkout();
         WorkoutLog completedLog = workoutLogRepository.save(workoutLog);
 
-        //Após a conclusão do treino, o serviço de gamificação é chamado(Concede XP e conquistas).
-        gamificationService.awardXpForWorkout(currentUser, completedLog);
-        List<Achievement> newAchievements = gamificationService.checkAndAwardAchievements();
+        WorkoutCompletedEvent event = new WorkoutCompletedEvent(completedLog);
+        eventPublisher.publishEvent(event);
+
+        List<Achievement> newAchievements = event.getNewlyAwardedAchievements();
 
         WorkoutLogResponseDTO logDTO = mapToResponseDTO(completedLog);
         return new CompleteWorkoutResponseDTO(logDTO, newAchievements);

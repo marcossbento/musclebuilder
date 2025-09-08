@@ -1,5 +1,6 @@
 package com.musclebuilder.service;
 
+import com.musclebuilder.event.WorkoutCompletedEvent;
 import com.musclebuilder.model.Achievement;
 import com.musclebuilder.model.User;
 import com.musclebuilder.model.WorkoutLog;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -38,11 +40,23 @@ public class GamificationService {
         this.userService = userService;
     }
 
-    public List<Achievement> checkAndAwardAchievements() {
-        User currentUser = userService.findCurrentUser();
+    @EventListener
+    public void handleWorkoutCompleted(WorkoutCompletedEvent event) {
+
+        WorkoutLog completedLog = event.getWorkoutLog();
+        User user = completedLog.getUser();
+
+        awardXpForWorkout(user, completedLog);
+        List<Achievement> newAchievements = checkAndAwardAchievements(user);
+
+        event.addAchievements(newAchievements);
+
+    }
+
+    public List<Achievement> checkAndAwardAchievements(User user) {
 
         return achievementCheckers.stream()
-                .map(checker -> checker.check(currentUser))
+                .map(checker -> checker.check(user))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toList());
