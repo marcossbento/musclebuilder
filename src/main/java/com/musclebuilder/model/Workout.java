@@ -20,9 +20,6 @@ public class Workout {
 
     private String description;
 
-    @Column(name = "workout_type")
-    private String workoutType;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -36,6 +33,10 @@ public class Workout {
 
     @Enumerated(EnumType.STRING)
     private WorkoutStatus status = WorkoutStatus.ACTIVE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "workout_type")
+    private WorkoutType workoutType;
 
     @Column(name = "estimated_duration_minutes")
     private Integer estimatedDurationMinutes;
@@ -65,7 +66,7 @@ public class Workout {
         this.difficultyLevel = difficultyLevel;
     }
 
-    public Workout(final Long id, final String name, final String description, final String workoutType, final User user, final Integer weekNumber, final Integer dayNumber, final WorkoutStatus status, final Integer estimatedDurationMinutes, final DifficultyLevel difficultyLevel, final List<WorkoutExercise> workoutExercises, final List<WorkoutLog> workoutLogs, final LocalDateTime createdAt, final LocalDateTime updatedAt) {
+    public Workout(final Long id, final String name, final String description, final WorkoutType workoutType, final User user, final Integer weekNumber, final Integer dayNumber, final WorkoutStatus status, final Integer estimatedDurationMinutes, final DifficultyLevel difficultyLevel, final List<WorkoutExercise> workoutExercises, final List<WorkoutLog> workoutLogs, final LocalDateTime createdAt, final LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -106,11 +107,11 @@ public class Workout {
         this.description = description;
     }
 
-    public String getWorkoutType() {
+    public WorkoutType getWorkoutType() {
         return this.workoutType;
     }
 
-    public void setWorkoutType(final String workoutType) {
+    public void setWorkoutType(final WorkoutType workoutType) {
         this.workoutType = workoutType;
     }
 

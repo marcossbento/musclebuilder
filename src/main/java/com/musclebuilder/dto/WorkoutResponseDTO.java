@@ -4,6 +4,7 @@ package com.musclebuilder.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.musclebuilder.model.DifficultyLevel;
 import com.musclebuilder.model.WorkoutStatus;
+import com.musclebuilder.model.WorkoutType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -21,7 +22,7 @@ public record WorkoutResponseDTO(
 
     String description,
 
-    String workoutType,
+    WorkoutType workoutType,
 
     Long userId,
 
