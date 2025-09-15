@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -25,9 +26,9 @@ public class GamificationService {
     private static final Logger logger = LoggerFactory.getLogger(GamificationService.class);
 
     // Constantes de XP distribuídos por ação do user
-    private static final long XP_PER_WORKOUT = 100;
+    private static final long XP_PER_WORKOUT = 150;
     private static final double XP_PER_VOLUME_UNIT = 0.5;
-    private static final int BASE_XP_FOR_NEXT_LEVEL = 1000;
+    private static final double VOLUME_XP_CAP_RATIO = 2.0;
 
     private final WorkoutLogRepository workoutLogRepository;
     private final List<AchievementChecker> achievementCheckers;
@@ -63,18 +64,55 @@ public class GamificationService {
     }
 
     public void awardXpForWorkout(User user, WorkoutLog workoutLog) {
-        long xpGained = XP_PER_WORKOUT;
-        if (workoutLog.getTotalVolume() != null && workoutLog.getTotalVolume() > 0) {
-            xpGained += (long) (workoutLog.getTotalVolume() * XP_PER_VOLUME_UNIT);
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+
+        long workoutCompletedTodayCount = workoutLogRepository.countByUserAndStatusAndCompletedAtAfter(user, WorkoutLogStatus.COMPLETED, startOfDay);
+
+        double dailyXpModifier = 0;
+        switch ((int) workoutCompletedTodayCount) {
+            case 0: // Caso seja o primeiro treino do dia
+                dailyXpModifier = 1.0;
+                break;
+            case 1: // Caso seja o segundo treino do dia
+                dailyXpModifier = 0.5;
+                break;
+            case 2: // Caso seja o terceiro ou mais
+                dailyXpModifier = 0.1;
+                break;
         }
 
-        logger.info("Concedendo {} XP para o usuário {}", xpGained, user.getEmail());
+        long actualVolumeXp = 0;
+        if (workoutLog.getTotalVolume() != null && workoutLog.getTotalVolume() > 0) {
+            actualVolumeXp = (long) (workoutLog.getTotalVolume() * XP_PER_VOLUME_UNIT);
+        }
+
+        // Cálculo do teto do XP proveniente do volume
+        long volumeXpCap = (long) (XP_PER_WORKOUT * VOLUME_XP_CAP_RATIO);
+        // O XP final proveniente do volume é o MENOR valor entre o que o usuário fez e o teto
+        long finalVolumeXp = Math.min(actualVolumeXp, volumeXpCap);
+
+        long totalBaseXp = XP_PER_WORKOUT + finalVolumeXp;
+
+        long xpGained = (long) (totalBaseXp * dailyXpModifier);
+
+        logger.info(
+                "---------------------------------------------------------" +
+                        "Concedendo {} XP para o usuário {} (Base: {}, Volume: {}/{} capped, Modificador Diário: {}%) " +
+                        "----------------------------------------------------------------",
+                xpGained,
+                user.getEmail(),
+                XP_PER_WORKOUT,
+                finalVolumeXp,
+                actualVolumeXp,
+                (int)(dailyXpModifier * 100)
+        );
         user.setExperiencePoints(user.getExperiencePoints() + xpGained);
 
         checkLevelUp(user);
     }
 
-    // Cálculo de XP necessário para próximo nível, resultado exponencial de acordo com o nível
+    // Cálculo de XP necessário para próximo nível, resultado exponencial conforme o nível
     public long getTotalXpForLevel(int level) {
         if (level <= 1) {
             return 0;

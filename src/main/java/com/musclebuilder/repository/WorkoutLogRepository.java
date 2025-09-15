@@ -23,6 +23,8 @@ public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, Long> {
 
     long countByUserAndStatusAndStartedAtAfter(User user, WorkoutLogStatus status, LocalDateTime startDate);
 
+    long countByUserAndStatusAndCompletedAtAfter(User user, WorkoutLogStatus status, LocalDateTime completeDate);
+
     boolean existsByUserAndStatus(User user, WorkoutLogStatus status);
 
     List<WorkoutLog> findByUserAndStatusOrderByCompletedAtDesc(User user, WorkoutLogStatus status);

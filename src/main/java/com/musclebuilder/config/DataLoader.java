@@ -1,9 +1,6 @@
 package com.musclebuilder.config;
 
-import com.musclebuilder.model.DifficultyLevel;
-import com.musclebuilder.model.Exercise;
-import com.musclebuilder.model.User;
-import com.musclebuilder.model.Workout;
+import com.musclebuilder.model.*;
 import com.musclebuilder.repository.ExerciseRepository;
 import com.musclebuilder.repository.UserRepository;
 import com.musclebuilder.repository.WorkoutRepository;
@@ -12,6 +9,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class DataLoader implements CommandLineRunner {
@@ -34,9 +34,9 @@ public class DataLoader implements CommandLineRunner {
             System.out.println(">>> Povoando banco de dados com  dados iniciais...");
             User savedUser = loadAndSaveUser();
 
-            List<Exercise> savedExercises = loadAndSaveExercises();
+            Map<String, Exercise> exerciseByName = loadAndSaveExercises();
 
-            loadWorkouts(savedUser, savedExercises);
+            loadWorkouts(savedUser, exerciseByName);
 
             System.out.println(">>> Povoamento concluído");
         } else {
@@ -53,47 +53,71 @@ public class DataLoader implements CommandLineRunner {
         return userRepository.save(user);
     }
 
-    private List<Exercise> loadAndSaveExercises() {
+    private Map<String, Exercise> loadAndSaveExercises() {
         List<Exercise> exercises = List.of(
                 new Exercise("Supino Reto", "Principal exercício para peitoral.", "PEITO", "Barra", DifficultyLevel.INTERMEDIATE, "assets/exercises/supinoBarra.png"),
                 new Exercise("Agachamento Livre", "Exercício fundamental para pernas e glúteos.", "PERNAS", "Barra", DifficultyLevel.ADVANCED, "assets/exercises/agachamentoLivre.png"),
                 new Exercise("Remada Curvada", "Excelente para espessura das costas.", "COSTAS", "Barra", DifficultyLevel.INTERMEDIATE, "assets/exercises/remadaCurvada.png"),
                 new Exercise("Desenvolvimento Militar", "Trabalha a porção frontal e medial dos ombros.", "OMBROS", "Halteres", DifficultyLevel.INTERMEDIATE, "assets/exercises/desenvolvimentoMilitar.png"),
                 new Exercise("Rosca Direta", "Focado no trabalho do bíceps braquial.", "BICEPS", "Barra", DifficultyLevel.BEGINNER, "assets/exercises/roscaDireta.png"),
-                new Exercise("Tríceps Pulley", "Isolamento eficaz para o tríceps.", "TRICEPS", "Polia", DifficultyLevel.BEGINNER, "assets/exercises/tricepsPulley.png")
+                new Exercise("Tríceps Pulley", "Isolamento eficaz para o tríceps.", "TRICEPS", "Polia", DifficultyLevel.BEGINNER, "assets/exercises/tricepsPulley.png"),
+                new Exercise("Levantamento Terra", "Trabalha a cadeia posterior completa", "COSTAS", "Barra", DifficultyLevel.ADVANCED, null),
+                new Exercise("Crucifixo", "Exercício essencial para desenvolvimento da parte interna do peito", "PEITO", "Nenhum", DifficultyLevel.BEGINNER, null)
         );
 
-        return exerciseRepository.saveAll(exercises);
+        List<Exercise> savedExercises = exerciseRepository.saveAll(exercises);
+
+        return savedExercises.stream()
+                .collect(Collectors.toMap(Exercise::getName, Function.identity()));
     }
 
-    private void loadWorkouts(User user, List<Exercise> exercises) {
-        Exercise supino = exercises.get(0);
-        Exercise agachamento = exercises.get(1);
-        Exercise remada = exercises.get(2);
-        Exercise desenvolvimento = exercises.get(3);
-        Exercise roscaDireta = exercises.get(4);
-        Exercise tricepsPulley = exercises.get(5);
+    private void loadWorkouts(User user, Map<String, Exercise> exercisesByName) {
 
-        Workout treinoForca = new Workout(
-                "Push/Pull Padrão",
-                "Treino focado em movimentos compostos básico para ganho de força.",
+        Workout pushWorkout = new Workout(
+                "Push Day",
+                "Foco em peito, ombro e tríceps",
                 user,
                 DifficultyLevel.INTERMEDIATE
         );
-        treinoForca.addExercise(supino, 3, 8, 80.0, 90, 1);
-        treinoForca.addExercise(remada, 3, 8, 70.0, 90, 2);
-        treinoForca.addExercise(desenvolvimento, 3, 10, 20.0, 60, 3);
+        pushWorkout.setWorkoutType(WorkoutType.PUSH);
+        pushWorkout.addExercise(exercisesByName.get("Supino Reto"), 3, 8, 80.0, 90, 1);
+        pushWorkout.addExercise(exercisesByName.get("Desenvolvimento Militar"), 3, 8, 70.0, 90, 2);
+        pushWorkout.addExercise(exercisesByName.get("Rosca Direta"), 3, 10, 20.0, 60, 3);
 
-        Workout treinoHipertrofia = new Workout(
-                "Full Body Hipertrofia",
-                "Treino de corpo inteiro para estimular o crescimento muscular",
+
+        Workout pullWorkout = new Workout(
+                "Pull Day",
+                "Foco em costas e bíceps",
+                user,
+                DifficultyLevel.INTERMEDIATE
+        );
+        pushWorkout.setWorkoutType(WorkoutType.PULL);
+        pullWorkout.addExercise(exercisesByName.get("Remada Curvada"), 4, 12, 60.0, 75, 1);
+        pullWorkout.addExercise(exercisesByName.get("Levantamento Terra"), 3, 15, 20.0, 45, 2);
+        pullWorkout.addExercise(exercisesByName.get("Rosca Direta"), 3, 15, 15.0, 45, 3);
+
+
+        Workout legsWorkout = new Workout(
+                "Leg Day",
+                "Foco em pernas",
+                user,
+                DifficultyLevel.ADVANCED
+        );
+        legsWorkout.setWorkoutType(WorkoutType.LEGS);
+        legsWorkout.addExercise(exercisesByName.get("Agachamento Livre"), 5, 10, 90.0, 120, 1);
+
+
+        Workout fullBodyWorkout = new Workout(
+                "Full Body - Iniciante",
+                "Treino de corpo inteiro para adaptação",
                 user,
                 DifficultyLevel.BEGINNER
         );
-        treinoHipertrofia.addExercise(agachamento, 4, 12, 60.0, 75, 1);
-        treinoHipertrofia.addExercise(roscaDireta, 3, 15, 20.0, 45, 2);
-        treinoHipertrofia.addExercise(tricepsPulley, 3, 15, 15.0, 45, 3);
+        fullBodyWorkout.setWorkoutType(WorkoutType.FULL_BODY);
+        fullBodyWorkout.addExercise(exercisesByName.get("Agachamento Livre"), 3, 12, 40.0, 90, 1);
+        fullBodyWorkout.addExercise(exercisesByName.get("Crucifixo"), 3, 15, 0.0, 60, 2);
+        fullBodyWorkout.addExercise(exercisesByName.get("Remada Curvada"), 3, 12, 40.0, 90, 3);
 
-        workoutRepository.saveAll(List.of(treinoForca, treinoHipertrofia));;
+        workoutRepository.saveAll(List.of(pushWorkout, pullWorkout, legsWorkout, fullBodyWorkout));;
     }
 }
