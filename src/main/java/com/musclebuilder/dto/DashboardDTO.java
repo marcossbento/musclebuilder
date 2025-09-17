@@ -1,5 +1,6 @@
 package com.musclebuilder.dto;
 
+import java.util.List;
 import java.util.Optional;
 
 public record DashboardDTO(
@@ -7,7 +8,7 @@ public record DashboardDTO(
 
         GamificationStatsDTO stats,
 
-        WeeklyMissionDTO weeklyMission,
+        List<MissionProgressDTO> activeMissions,
 
         Optional<RecommendedWorkoutDTO> recommendedWorkout,
 
@@ -25,12 +26,6 @@ public record DashboardDTO(
             long totalWorkouts,
             double totalVolume,
             int streak
-    ) {}
-
-    public record WeeklyMissionDTO(
-            String title,
-            int completed,
-            int goal
     ) {}
 
     public record RecommendedWorkoutDTO(

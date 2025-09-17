@@ -2,6 +2,7 @@ package com.musclebuilder.service;
 
 import com.musclebuilder.dto.AchievementDTO;
 import com.musclebuilder.dto.DashboardDTO;
+import com.musclebuilder.dto.MissionProgressDTO;
 import com.musclebuilder.model.User;
 import com.musclebuilder.model.WorkoutLogStatus;
 import com.musclebuilder.repository.AchievementRepository;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,13 +23,24 @@ public class DashboardService {
     private final ProgressService progressService;
     private final AchievementRepository achievementRepository;
     private final WorkoutLogRepository workoutLogRepository;
+    private final List<MissionChecker> missionCheckers;
+    private final RecommendationService recommendationService;
 
-    public DashboardService(UserService userService, GamificationService gamificationService, ProgressService progressService, AchievementRepository achievementRepository, WorkoutLogRepository workoutLogRepository) {
+    public DashboardService(UserService userService,
+                            GamificationService gamificationService,
+                            ProgressService progressService,
+                            AchievementRepository achievementRepository,
+                            WorkoutLogRepository workoutLogRepository,
+                            List<MissionChecker> missionCheckers,
+                            RecommendationService recommendationService
+    ) {
         this.userService = userService;
         this.gamificationService = gamificationService;
         this.progressService = progressService;
         this.achievementRepository = achievementRepository;
         this.workoutLogRepository = workoutLogRepository;
+        this.missionCheckers = missionCheckers;
+        this.recommendationService = recommendationService;
     }
 
     public DashboardDTO getDashboardData() {
@@ -35,14 +48,16 @@ public class DashboardService {
 
         DashboardDTO.UserLevelDTO userLevel = buildUserLevelDTO(currentUser);
         DashboardDTO.GamificationStatsDTO stats = buildStatsDTO(currentUser);
-        DashboardDTO.WeeklyMissionDTO weeklyMission = buildWeeklyMissionDTO(currentUser);
+
+        List<MissionProgressDTO> activeMissions = buildWeeklyMissionList(currentUser);
+
         Optional<DashboardDTO.RecommendedWorkoutDTO> recommendedWorkout = findRecommendedWorkout(currentUser);
         Optional<AchievementDTO> lastAchievement = findLastAchievement(currentUser);
 
         return new DashboardDTO(
                 userLevel,
                 stats,
-                weeklyMission,
+                activeMissions,
                 recommendedWorkout,
                 lastAchievement
         );
@@ -81,29 +96,26 @@ public class DashboardService {
         );
     }
 
-    private DashboardDTO.WeeklyMissionDTO buildWeeklyMissionDTO(User user) {
-        LocalDate startOfWeek = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        int weeklyGoal = 3;
-        long workoutsThisWeek = workoutLogRepository.countByUserAndStatusAndStartedAtAfter(
-                user,
-                WorkoutLogStatus.COMPLETED,
-                startOfWeek.atStartOfDay()
-        );
-
-        return new DashboardDTO.WeeklyMissionDTO(
-                "Complete " + weeklyGoal + " treinos essa semana",
-                (int) workoutsThisWeek,
-                weeklyGoal
-        );
+    private List<MissionProgressDTO> buildWeeklyMissionList(User user) {
+        return missionCheckers.stream()
+                .map(checker -> new MissionProgressDTO(
+                        checker.getDescription(),
+                        checker.getXpReward(),
+                        checker.getGoal(),
+                        checker.getCurrentProgress(user)
+                ))
+                .toList();
     }
 
     private Optional<DashboardDTO.RecommendedWorkoutDTO> findRecommendedWorkout(User user) {
-        return workoutLogRepository.findFirstByUserAndStatusOrderByCompletedAtDesc(user, WorkoutLogStatus.COMPLETED)
-                .map(lastLog -> new DashboardDTO.RecommendedWorkoutDTO(
-                        lastLog.getWorkout().getId(),
-                        lastLog.getWorkoutName(),
-                        lastLog.getWorkout().getDescription()
-                ));
+        return recommendationService.recommendWorkout(user)
+                .map(workout -> {
+                    return new DashboardDTO.RecommendedWorkoutDTO(
+                            workout.getId(),
+                            workout.getName(),
+                            workout.getDescription()
+                    );
+                });
     }
 
     private Optional<AchievementDTO> findLastAchievement(User user) {

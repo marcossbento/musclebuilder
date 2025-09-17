@@ -18,6 +18,7 @@ import java.util.Optional;
 public class WeeklyWorkoutCountMissionChecker implements MissionChecker {
 
     private static final String MISSION_ID = "WEEKLY_3_WORKOUTS";
+    private static final String DESCRIPTION = "Complete 3 treinos essa semana";
     private static final Long XP_REWARD = 250L;
     private static final int MISSION_GOAL = 3;
 
@@ -32,11 +33,11 @@ public class WeeklyWorkoutCountMissionChecker implements MissionChecker {
 
     @Override
     public Optional<Long> check(WorkoutCompletedEvent event) {
-        LocalDate todayDate = LocalDate.now();
-        LocalDate mondayDate = todayDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-
-        LocalDateTime startOfWeek = mondayDate.atStartOfDay();
         User currentUser = event.getWorkoutLog().getUser();
+
+        LocalDateTime startOfWeek = LocalDate.now()
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                .atStartOfDay();
 
         boolean isRewardAlreadyClaimedThisWeek = missionCompletionRepository.existsByUserAndMissionIdAndCompletedAtAfter(currentUser, MISSION_ID, startOfWeek);
 
@@ -44,18 +45,37 @@ public class WeeklyWorkoutCountMissionChecker implements MissionChecker {
             return Optional.empty();
         }
 
-        long workoutsCount = workoutLogRepository.countByUserAndStatusAndCompletedAtAfter(currentUser, WorkoutLogStatus.COMPLETED, startOfWeek);
+        long currentProgress = getCurrentProgress(currentUser);
 
-        if (workoutsCount >= MISSION_GOAL) {
+        if (currentProgress >= MISSION_GOAL) {
             return Optional.of(XP_REWARD);
         }
 
         return Optional.empty();
-
     }
 
     @Override
     public String getMissionId() {
         return MISSION_ID;
     }
+
+    @Override
+    public String getDescription() { return DESCRIPTION; }
+
+    @Override
+    public long getXpReward() { return XP_REWARD; }
+
+    @Override
+    public long getGoal() { return MISSION_GOAL; }
+
+    @Override
+    public long getCurrentProgress(User user) {
+        LocalDateTime startOfWeek = LocalDate.now()
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                .atStartOfDay();
+
+        return workoutLogRepository.
+                countByUserAndStatusAndCompletedAtAfter(user, WorkoutLogStatus.COMPLETED, startOfWeek);
+    }
+
 }
