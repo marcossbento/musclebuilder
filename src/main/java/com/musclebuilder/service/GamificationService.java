@@ -103,13 +103,13 @@ public class GamificationService {
 
         double dailyXpModifier = 0;
         switch ((int) workoutCompletedTodayCount) {
-            case 0: // Caso seja o primeiro treino do dia
+            case 1: // Caso seja o primeiro treino do dia
                 dailyXpModifier = 1.0;
                 break;
-            case 1: // Caso seja o segundo treino do dia
+            case 2: // Caso seja o segundo treino do dia
                 dailyXpModifier = 0.5;
                 break;
-            case 2: // Caso seja o terceiro ou mais
+            default: // Caso seja o terceiro ou mais
                 dailyXpModifier = 0.1;
                 break;
         }
