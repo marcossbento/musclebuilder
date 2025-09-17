@@ -1,10 +1,8 @@
 package com.musclebuilder.service;
 
 import com.musclebuilder.event.WorkoutCompletedEvent;
-import com.musclebuilder.model.Achievement;
-import com.musclebuilder.model.User;
-import com.musclebuilder.model.WorkoutLog;
-import com.musclebuilder.model.WorkoutLogStatus;
+import com.musclebuilder.model.*;
+import com.musclebuilder.repository.MissionCompletionRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -31,26 +30,59 @@ public class GamificationService {
     private static final double VOLUME_XP_CAP_RATIO = 2.0;
 
     private final WorkoutLogRepository workoutLogRepository;
+    private final MissionCompletionRepository missionCompletionRepository;
     private final List<AchievementChecker> achievementCheckers;
+    private final List<MissionChecker> missionCheckers;
     private final UserService userService;
 
     @Autowired
-    public GamificationService(WorkoutLogRepository workoutLogRepository, List<AchievementChecker> achievementCheckers, UserService userService) {
+    public GamificationService(WorkoutLogRepository workoutLogRepository, MissionCompletionRepository missionCompletionRepository, List<AchievementChecker> achievementCheckers, List<MissionChecker> missionCheckers, UserService userService) {
         this.workoutLogRepository = workoutLogRepository;
+        this.missionCompletionRepository = missionCompletionRepository;
         this.achievementCheckers = achievementCheckers;
+        this.missionCheckers = missionCheckers;
         this.userService = userService;
     }
 
     @EventListener
+    @Transactional
     public void handleWorkoutCompleted(WorkoutCompletedEvent event) {
-
         WorkoutLog completedLog = event.getWorkoutLog();
         User user = completedLog.getUser();
 
         awardXpForWorkout(user, completedLog);
-        List<Achievement> newAchievements = checkAndAwardAchievements(user);
 
-        event.addAchievements(newAchievements);
+        List<MissionChecker> completedMissions = missionCheckers.stream()
+                .filter(checker -> checker.check(event).isPresent())
+                .toList();
+
+        long totalMissionXp = 0;
+        if (!completedMissions.isEmpty()) {
+
+            totalMissionXp = completedMissions.stream()
+                    .mapToLong(checker -> checker.check(event).orElse(0L))
+                    .sum();
+
+            List<MissionCompletion> completionRecords = completedMissions.stream()
+                    .map(checker -> new MissionCompletion(user, checker.getMissionId()))
+                    .toList();
+
+            missionCompletionRepository.saveAll(completionRecords);
+
+            logger.info("Missões concluídas: {}. Recompensa total: {} XP",
+                        completedMissions.stream().map(MissionChecker::getMissionId).collect(Collectors.joining(", ")),
+                        totalMissionXp
+                    );
+        }
+
+    if (totalMissionXp > 0) {
+        user.setExperiencePoints(user.getExperiencePoints() + totalMissionXp);
+    }
+
+    List<Achievement> newAchievements = checkAndAwardAchievements(user);
+    event.addAchievements(newAchievements);
+
+    checkLevelUp(user);
 
     }
 
