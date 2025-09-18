@@ -19,8 +19,9 @@ public class Exercise {
 
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "muscle_group")
-    private String muscleGroup;
+    private MuscleGroup muscleGroup;
 
     private String equipment;
 
@@ -42,7 +43,7 @@ public class Exercise {
 
     public Exercise() {}
 
-    public Exercise(String name, String description, String muscleGroup, String equipment, DifficultyLevel difficultyLevel, String imageUrl) {
+    public Exercise(String name, String description, MuscleGroup muscleGroup, String equipment, DifficultyLevel difficultyLevel, String imageUrl) {
         this.name = name;
         this.description = description;
         this.muscleGroup = muscleGroup;
@@ -51,7 +52,7 @@ public class Exercise {
         this.imageUrl = imageUrl;
     }
 
-    public Exercise(final Long id, final String name, final String description, final String muscleGroup, final String equipment, final DifficultyLevel difficultyLevel, final String imageUrl, final LocalDateTime createdAt, final LocalDateTime updatedAt, final List<ExerciseLog> exerciseLogs) {
+    public Exercise(final Long id, final String name, final String description, final MuscleGroup muscleGroup, final String equipment, final DifficultyLevel difficultyLevel, final String imageUrl, final LocalDateTime createdAt, final LocalDateTime updatedAt, final List<ExerciseLog> exerciseLogs) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -88,11 +89,11 @@ public class Exercise {
         this.description = description;
     }
 
-    public String getMuscleGroup() {
+    public MuscleGroup getMuscleGroup() {
         return this.muscleGroup;
     }
 
-    public void setMuscleGroup(final String muscleGroup) {
+    public void setMuscleGroup(final MuscleGroup muscleGroup) {
         this.muscleGroup = muscleGroup;
     }
 

@@ -3,6 +3,7 @@ package com.musclebuilder.service;
 import com.musclebuilder.dto.ExerciseDTO;
 import com.musclebuilder.exception.ResourceNotFoundException;
 import com.musclebuilder.model.Exercise;
+import com.musclebuilder.model.MuscleGroup;
 import com.musclebuilder.repository.ExerciseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,7 @@ public class ExerciseService {
                 .collect(Collectors.toList());
     }
 
-    public List<ExerciseDTO> getExerciseByMuscleGroup(String muscleGroup) {
+    public List<ExerciseDTO> getExerciseByMuscleGroup(MuscleGroup muscleGroup) {
         return exerciseRepository.findByMuscleGroup(muscleGroup).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

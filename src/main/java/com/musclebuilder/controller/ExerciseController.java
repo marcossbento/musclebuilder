@@ -1,6 +1,7 @@
 package com.musclebuilder.controller;
 
 import com.musclebuilder.dto.ExerciseDTO;
+import com.musclebuilder.model.MuscleGroup;
 import com.musclebuilder.repository.ExerciseRepository;
 import com.musclebuilder.service.ExerciseService;
 import jakarta.validation.Valid;
@@ -42,7 +43,7 @@ public class ExerciseController {
     }
 
     @GetMapping("/muscle-group/{muscleGroup}")
-    public ResponseEntity<List<ExerciseDTO>> getExercisesByMuscleGroup(@PathVariable String muscleGroup) {
+    public ResponseEntity<List<ExerciseDTO>> getExercisesByMuscleGroup(@PathVariable MuscleGroup muscleGroup) {
         List<ExerciseDTO> exercises = exerciseService.getExerciseByMuscleGroup(muscleGroup);
         return ResponseEntity.ok(exercises);
     }
