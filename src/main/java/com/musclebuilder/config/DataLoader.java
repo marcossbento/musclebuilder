@@ -55,14 +55,14 @@ public class DataLoader implements CommandLineRunner {
 
     private Map<String, Exercise> loadAndSaveExercises() {
         List<Exercise> exercises = List.of(
-                new Exercise("Supino Reto", "Principal exercício para peitoral.", "PEITO", "Barra", DifficultyLevel.INTERMEDIATE, "assets/exercises/supinoBarra.png"),
-                new Exercise("Agachamento Livre", "Exercício fundamental para pernas e glúteos.", "PERNAS", "Barra", DifficultyLevel.ADVANCED, "assets/exercises/agachamentoLivre.png"),
-                new Exercise("Remada Curvada", "Excelente para espessura das costas.", "COSTAS", "Barra", DifficultyLevel.INTERMEDIATE, "assets/exercises/remadaCurvada.png"),
-                new Exercise("Desenvolvimento Militar", "Trabalha a porção frontal e medial dos ombros.", "OMBROS", "Halteres", DifficultyLevel.INTERMEDIATE, "assets/exercises/desenvolvimentoMilitar.png"),
-                new Exercise("Rosca Direta", "Focado no trabalho do bíceps braquial.", "BICEPS", "Barra", DifficultyLevel.BEGINNER, "assets/exercises/roscaDireta.png"),
-                new Exercise("Tríceps Pulley", "Isolamento eficaz para o tríceps.", "TRICEPS", "Polia", DifficultyLevel.BEGINNER, "assets/exercises/tricepsPulley.png"),
-                new Exercise("Levantamento Terra", "Trabalha a cadeia posterior completa", "COSTAS", "Barra", DifficultyLevel.ADVANCED, null),
-                new Exercise("Crucifixo", "Exercício essencial para desenvolvimento da parte interna do peito", "PEITO", "Nenhum", DifficultyLevel.BEGINNER, null)
+                new Exercise("Supino Reto", "Principal exercício para peitoral.", MuscleGroup.CHEST, "Barra", DifficultyLevel.INTERMEDIATE, "assets/exercises/supinoBarra.png"),
+                new Exercise("Agachamento Livre", "Exercício fundamental para pernas e glúteos.", MuscleGroup.LEGS, "Barra", DifficultyLevel.ADVANCED, "assets/exercises/agachamentoLivre.png"),
+                new Exercise("Remada Curvada", "Excelente para espessura das costas.", MuscleGroup.BACK, "Barra", DifficultyLevel.INTERMEDIATE, "assets/exercises/remadaCurvada.png"),
+                new Exercise("Desenvolvimento Militar", "Trabalha a porção frontal e medial dos ombros.", MuscleGroup.SHOULDERS, "Halteres", DifficultyLevel.INTERMEDIATE, "assets/exercises/desenvolvimentoMilitar.png"),
+                new Exercise("Rosca Direta", "Focado no trabalho do bíceps braquial.", MuscleGroup.BICEPS, "Barra", DifficultyLevel.BEGINNER, "assets/exercises/roscaDireta.png"),
+                new Exercise("Tríceps Pulley", "Isolamento eficaz para o tríceps.", MuscleGroup.TRICEPS, "Polia", DifficultyLevel.BEGINNER, "assets/exercises/tricepsPulley.png"),
+                new Exercise("Levantamento Terra", "Trabalha a cadeia posterior completa", MuscleGroup.BACK, "Barra", DifficultyLevel.ADVANCED, null),
+                new Exercise("Crucifixo", "Exercício essencial para desenvolvimento da parte interna do peito", MuscleGroup.CHEST, "Nenhum", DifficultyLevel.BEGINNER, null)
         );
 
         List<Exercise> savedExercises = exerciseRepository.saveAll(exercises);
