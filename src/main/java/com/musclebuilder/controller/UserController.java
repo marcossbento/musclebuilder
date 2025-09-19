@@ -22,7 +22,7 @@ public class UserController {
     }
 
     // == ENDPOINTS PÚBLICOS
-    @PostMapping("/register")
+    @PostMapping("/")
     public ResponseEntity<UserDTO> registerUser(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO) {
         UserDTO savedUser = userService.registerUser(userRegistrationDTO);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);

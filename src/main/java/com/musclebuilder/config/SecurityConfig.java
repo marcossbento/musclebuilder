@@ -45,7 +45,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(
                                 "/api/login",
-                                "/api/users/register",
+                                "/api/users",
                                 "/v3/api-docs/**",     // Libera o acesso ao arquivo de especificação OpenAPI
                                 "/swagger-ui.html",   // Libera o acesso à página HTML principal do Swagger
                                 "/swagger-ui/**"
