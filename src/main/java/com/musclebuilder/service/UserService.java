@@ -55,16 +55,6 @@ public class UserService {
         return mapToDTO(currentUser);
     }
 
-    @Transactional(readOnly = true)
-    public List<AchievementDTO> getCurrentUserAchievements() {
-        User currentUser = findCurrentUser();
-        List<Achievement> achievements = achievementRepository.findByUser(currentUser);
-
-        return achievements.stream()
-                .map(this::mapToAchievementDTO)
-                .collect(Collectors.toList());
-    }
-
     /* MÉTODO ROLE-BASED PARA ADMIN TODO
     public UserDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)

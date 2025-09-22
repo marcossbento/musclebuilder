@@ -1,6 +1,8 @@
 package com.musclebuilder.controller;
 
 import com.musclebuilder.dto.*;
+import com.musclebuilder.model.Achievement;
+import com.musclebuilder.service.AchievementService;
 import com.musclebuilder.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,16 +11,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
+    private final AchievementService achievementService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(
+                            UserService userService,
+                            AchievementService achievementService
+                         )
+    {
         this.userService = userService;
+        this.achievementService = achievementService;
     }
 
     // == ENDPOINTS PÚBLICOS
@@ -43,9 +52,13 @@ public class UserController {
 
     @GetMapping("/me/achievements")
     public ResponseEntity<List<AchievementDTO>> getCurrentUserAchievements() {
-        List<AchievementDTO> achievements = userService.getCurrentUserAchievements();
+        List<Achievement> achievements = achievementService.getCurrentUserAchievements();
 
-        return ResponseEntity.ok(achievements);
+        List<AchievementDTO> achievementDTOs = achievements.stream()
+                .map(this::mapToAchievementDTO)
+                .toList();
+
+        return ResponseEntity.ok(achievementDTOs);
     }
 
     @PatchMapping("/me/email")
@@ -64,6 +77,15 @@ public class UserController {
     public ResponseEntity<Void> deleteCurrentUser() {
         userService.deleteCurrentUser();
         return ResponseEntity.noContent().build();
+    }
+
+    private AchievementDTO mapToAchievementDTO(Achievement achievement) {
+        return new AchievementDTO(
+                achievement.getName(),
+                achievement.getDescription(),
+                achievement.getBadgeUrl(),
+                achievement.getEarnedAt()
+        );
     }
 
     /*TODO Endpoint ROLE-BASED ADMIN
