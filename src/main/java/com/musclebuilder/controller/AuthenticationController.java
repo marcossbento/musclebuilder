@@ -2,7 +2,10 @@ package com.musclebuilder.controller;
 
 import com.musclebuilder.dto.AuthenticationResponse;
 import com.musclebuilder.dto.LoginRequest;
+import com.musclebuilder.dto.RefreshTokenRequest;
+import com.musclebuilder.model.RefreshToken;
 import com.musclebuilder.service.security.JwtService;
+import com.musclebuilder.service.security.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -21,18 +24,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/auth")
 public class AuthenticationController {
 
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     @Autowired
-    public AuthenticationController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, JwtService jwtService) {
+    public AuthenticationController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, JwtService jwtService, RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @PostMapping("/login")
@@ -46,14 +51,25 @@ public class AuthenticationController {
         );
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.email());
-
         final String jwt = jwtService.generateToken(userDetails);
+        final String refreshToken = refreshTokenService.createRefreshToken(loginRequest.email()).getToken();
 
-        System.out.println("--- TOKEN GERADO ---");
-        System.out.println(jwt);
-        System.out.println("--------------------");
+        return ResponseEntity.ok(new AuthenticationResponse(jwt, refreshToken));
+    }
 
-        return ResponseEntity.ok(new AuthenticationResponse(jwt));
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthenticationResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        String requestRefreshToken = refreshTokenRequest.token();
+
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+                    String newAccessToken = jwtService.generateToken(userDetails);
+                    return ResponseEntity.ok(new AuthenticationResponse(newAccessToken, requestRefreshToken));
+                })
+                .orElseThrow(() -> new RuntimeException("RefreshToken não encontrado na base de dados"));
     }
 }
 
