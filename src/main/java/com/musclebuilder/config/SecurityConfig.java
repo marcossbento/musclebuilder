@@ -44,8 +44,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(
-                                "/api/login",
-                                "/api/users",
+                                "/api/auth/login",
+                                "api/auth/refresh",
+                                "/api/users/register",
                                 "/v3/api-docs/**",     // Libera o acesso ao arquivo de especificação OpenAPI
                                 "/swagger-ui.html",   // Libera o acesso à página HTML principal do Swagger
                                 "/swagger-ui/**"
