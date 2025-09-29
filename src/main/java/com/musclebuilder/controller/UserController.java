@@ -3,6 +3,7 @@ package com.musclebuilder.controller;
 import com.musclebuilder.dto.*;
 import com.musclebuilder.model.Achievement;
 import com.musclebuilder.service.AchievementService;
+import com.musclebuilder.service.CredentialsService;
 import com.musclebuilder.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,15 +20,18 @@ public class UserController {
 
     private final UserService userService;
     private final AchievementService achievementService;
+    private final CredentialsService credentialsService;
 
     @Autowired
     public UserController(
                             UserService userService,
-                            AchievementService achievementService
+                            AchievementService achievementService,
+                            CredentialsService credentialsService
                          )
     {
         this.userService = userService;
         this.achievementService = achievementService;
+        this.credentialsService = credentialsService;
     }
 
     // == ENDPOINTS PÚBLICOS
@@ -63,13 +67,13 @@ public class UserController {
 
     @PatchMapping("/me/email")
     public ResponseEntity<UserDTO> updateCurrentUserEmail(@Valid @RequestBody EmailUpdateDTO emailUpdateDTO) {
-        UserDTO updatedUser = userService.updateEmail(emailUpdateDTO);
+        UserDTO updatedUser = credentialsService.updateEmail(emailUpdateDTO);
         return ResponseEntity.ok(updatedUser);
     }
 
     @PatchMapping("/me/password")
     public ResponseEntity<Void> updateCurrentUserPassword(@Valid @RequestBody PasswordUpdateDTO passwordUpdateDTO) {
-        userService.updatePassword(passwordUpdateDTO);
+        credentialsService.updatePassword(passwordUpdateDTO);
         return ResponseEntity.noContent().build();
     }
 
