@@ -2,6 +2,7 @@ package com.musclebuilder.service;
 
 import com.musclebuilder.dto.ExerciseDTO;
 import com.musclebuilder.exception.ResourceNotFoundException;
+import com.musclebuilder.mapper.ExerciseMapper;
 import com.musclebuilder.model.Exercise;
 import com.musclebuilder.model.MuscleGroup;
 import com.musclebuilder.repository.ExerciseRepository;
@@ -15,40 +16,43 @@ import java.util.stream.Collectors;
 public class ExerciseService {
 
     private final ExerciseRepository exerciseRepository;
+    private final ExerciseMapper exerciseMapper;
 
     @Autowired
-    public ExerciseService(ExerciseRepository exerciseRepository) {
+    public ExerciseService(ExerciseRepository exerciseRepository, ExerciseMapper exerciseMapper
+    ) {
         this.exerciseRepository = exerciseRepository;
+        this.exerciseMapper = exerciseMapper;
     }
 
     public ExerciseDTO createExercise(ExerciseDTO exerciseDTO) {
-        Exercise exercise = convertToEntity(exerciseDTO);
+        Exercise exercise = exerciseMapper.toEntity(exerciseDTO);
         Exercise saverExercise = exerciseRepository.save(exercise);
-        return convertToDTO(saverExercise);
+        return exerciseMapper.toDto(saverExercise);
     }
 
     public ExerciseDTO getExerciseById(Long id) {
         Exercise exercise = exerciseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Exercício não encontrado com id: " +id));
 
-        return convertToDTO(exercise);
+        return exerciseMapper.toDto(exercise);
     }
 
     public List<ExerciseDTO> getAllExercises() {
         return exerciseRepository.findAll().stream()
-                .map(this::convertToDTO)
+                .map(exerciseMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     public List<ExerciseDTO> getExerciseByMuscleGroup(MuscleGroup muscleGroup) {
         return exerciseRepository.findByMuscleGroup(muscleGroup).stream()
-                .map(this::convertToDTO)
+                .map(exerciseMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     public List<ExerciseDTO> searchExercisesByName(String name) {
         return exerciseRepository.findByNameContainingIgnoreCase(name).stream()
-                .map(this::convertToDTO)
+                .map(exerciseMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -64,7 +68,7 @@ public class ExerciseService {
         exercise.setImageUrl(exerciseDTO.imageUrl());
 
         Exercise updatedExercise = exerciseRepository.save(exercise);
-        return convertToDTO(updatedExercise);
+        return exerciseMapper.toDto(updatedExercise);
     }
 
     public void deleteExercise(Long id) {
@@ -74,29 +78,4 @@ public class ExerciseService {
 
         exerciseRepository.deleteById(id);
     }
-
-
-    private ExerciseDTO convertToDTO(Exercise exercise) {
-        return new ExerciseDTO(
-                exercise.getId(),
-                exercise.getName(),
-                exercise.getDescription(),
-                exercise.getMuscleGroup(),
-                exercise.getEquipment(),
-                exercise.getDifficultyLevel(),
-                exercise.getImageUrl()
-        );
-    }
-
-    private Exercise convertToEntity(ExerciseDTO dto) {
-        Exercise exercise = new Exercise();
-        exercise.setName(dto.name());
-        exercise.setDescription(dto.description());
-        exercise.setMuscleGroup(dto.muscleGroup());
-        exercise.setEquipment(dto.equipment());
-        exercise.setDifficultyLevel(dto.difficultyLevel());
-        exercise.setImageUrl(dto.imageUrl());
-        return exercise;
-    }
-
 }

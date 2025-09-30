@@ -1,6 +1,7 @@
 package com.musclebuilder.controller;
 
 import com.musclebuilder.dto.*;
+import com.musclebuilder.mapper.AchievementMapper;
 import com.musclebuilder.model.Achievement;
 import com.musclebuilder.service.AchievementService;
 import com.musclebuilder.service.CredentialsService;
@@ -21,17 +22,20 @@ public class UserController {
     private final UserService userService;
     private final AchievementService achievementService;
     private final CredentialsService credentialsService;
+    private final AchievementMapper achievementMapper;
 
     @Autowired
     public UserController(
                             UserService userService,
                             AchievementService achievementService,
-                            CredentialsService credentialsService
+                            CredentialsService credentialsService,
+                            AchievementMapper achievementMapper
                          )
     {
         this.userService = userService;
         this.achievementService = achievementService;
         this.credentialsService = credentialsService;
+        this.achievementMapper = achievementMapper;
     }
 
     // == ENDPOINTS PÚBLICOS
@@ -59,7 +63,7 @@ public class UserController {
         List<Achievement> achievements = achievementService.getCurrentUserAchievements();
 
         List<AchievementDTO> achievementDTOs = achievements.stream()
-                .map(this::mapToAchievementDTO)
+                .map(achievementMapper::toDto)
                 .toList();
 
         return ResponseEntity.ok(achievementDTOs);
@@ -81,15 +85,6 @@ public class UserController {
     public ResponseEntity<Void> deleteCurrentUser() {
         userService.deleteCurrentUser();
         return ResponseEntity.noContent().build();
-    }
-
-    private AchievementDTO mapToAchievementDTO(Achievement achievement) {
-        return new AchievementDTO(
-                achievement.getName(),
-                achievement.getDescription(),
-                achievement.getBadgeUrl(),
-                achievement.getEarnedAt()
-        );
     }
 
     /*TODO Endpoint ROLE-BASED ADMIN

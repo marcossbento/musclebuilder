@@ -1,6 +1,7 @@
 package com.musclebuilder.controller;
 
 import com.musclebuilder.dto.WorkoutResponseDTO;
+import com.musclebuilder.mapper.WorkoutMapper;
 import com.musclebuilder.model.User;
 import com.musclebuilder.model.Workout;
 import com.musclebuilder.model.WorkoutExercise;
@@ -11,11 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/workouts")
@@ -23,11 +20,13 @@ public class RecommendationController {
 
     private final RecommendationService recommendationService;
     private final SecurityContextService securityContextService;
+    private final WorkoutMapper workoutMapper;
 
     @Autowired
-    public RecommendationController(RecommendationService recommendationService, SecurityContextService securityContextService) {
+    public RecommendationController(RecommendationService recommendationService, SecurityContextService securityContextService, WorkoutMapper workoutMapper) {
         this.recommendationService = recommendationService;
         this.securityContextService = securityContextService;
+        this.workoutMapper = workoutMapper;
     }
 
     @GetMapping("/recommended")
@@ -38,44 +37,11 @@ public class RecommendationController {
 
         return recommendedWorkoutOpt
                 .map(workout -> {
-                    WorkoutResponseDTO responseDTO = mapToWorkoutResponseDTO(workout);
+                    WorkoutResponseDTO responseDTO = workoutMapper.toDto(workout);
                     return ResponseEntity.ok(responseDTO);
                 })
                 .orElseGet(() -> {
                     return ResponseEntity.notFound().build();
                 });
     }
-
-    private WorkoutResponseDTO mapToWorkoutResponseDTO(Workout workout) {
-        List<WorkoutResponseDTO.WorkoutExerciseDTO> exerciseDTOs = workout.getWorkoutExercises().stream()
-                .sorted(Comparator.comparingInt(WorkoutExercise::getOrderPosition))
-                .map(we -> new WorkoutResponseDTO.WorkoutExerciseDTO(
-                        we.getId(),
-                        we.getExercise().getId(),
-                        we.getExercise().getName(),
-                        we.getSets(),
-                        we.getRepsPerSet(),
-                        we.getWeight(),
-                        we.getRestSeconds(),
-                        we.getOrderPosition()
-                ))
-                .collect(Collectors.toList());
-
-        return new WorkoutResponseDTO(
-                workout.getId(),
-                workout.getName(),
-                workout.getDescription(),
-                workout.getWorkoutType(),
-                workout.getUser().getId(),
-                workout.getWeekNumber(),
-                workout.getDayNumber(),
-                workout.getStatus(),
-                workout.getEstimatedDurationMinutes(),
-                workout.getDifficultyLevel(),
-                exerciseDTOs,
-                workout.getCreatedAt(),
-                workout.getUpdatedAt()
-        );
-    }
-
 }

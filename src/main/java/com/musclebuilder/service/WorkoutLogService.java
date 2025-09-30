@@ -7,6 +7,7 @@ import com.musclebuilder.dto.WorkoutLogResponseDTO;
 import com.musclebuilder.event.WorkoutCompletedEvent;
 import com.musclebuilder.exception.ResourceNotFoundException;
 import com.musclebuilder.exception.UnauthorizedAccessException;
+import com.musclebuilder.mapper.WorkoutLogMapper;
 import com.musclebuilder.model.*;
 import com.musclebuilder.repository.ExerciseRepository;
 import com.musclebuilder.repository.UserRepository;
@@ -30,14 +31,24 @@ public class WorkoutLogService {
     private final ExerciseRepository exerciseRepository;
     private final SecurityContextService securityContextService;
     private final ApplicationEventPublisher eventPublisher;
+    private final WorkoutLogMapper workoutLogMapper;
 
     @Autowired
-    public WorkoutLogService(WorkoutLogRepository workoutLogRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository, GamificationService gamificationService, SecurityContextService securityContextService, ApplicationEventPublisher eventPublisher) {
+    public WorkoutLogService(
+                                WorkoutLogRepository workoutLogRepository,
+                                WorkoutRepository workoutRepository,
+                                ExerciseRepository exerciseRepository,
+                                GamificationService gamificationService,
+                                SecurityContextService securityContextService,
+                                ApplicationEventPublisher eventPublisher,
+                                WorkoutLogMapper workoutLogMapper
+    ){
         this.workoutLogRepository = workoutLogRepository;
         this.workoutRepository = workoutRepository;
         this.exerciseRepository = exerciseRepository;
         this.securityContextService = securityContextService;
         this.eventPublisher = eventPublisher;
+        this.workoutLogMapper = workoutLogMapper;
     }
 
     @Transactional
@@ -56,7 +67,7 @@ public class WorkoutLogService {
         }
 
         WorkoutLog savedLog = workoutLogRepository.save(newLog);
-        return mapToResponseDTO(savedLog);
+        return workoutLogMapper.toDto(savedLog);
     }
 
     @Transactional
@@ -84,7 +95,7 @@ public class WorkoutLogService {
         workoutLog.addExerciseLog(newExerciseLog);
 
         WorkoutLog updatedLog = workoutLogRepository.save(workoutLog);
-        return mapToResponseDTO(updatedLog);
+        return workoutLogMapper.toDto(updatedLog);
     }
 
     @Transactional
@@ -106,7 +117,7 @@ public class WorkoutLogService {
 
         List<Achievement> newAchievements = event.getNewlyAwardedAchievements();
 
-        WorkoutLogResponseDTO logDTO = mapToResponseDTO(completedLog);
+        WorkoutLogResponseDTO logDTO = workoutLogMapper.toDto(completedLog);
         return new CompleteWorkoutResponseDTO(logDTO, newAchievements);
     }
 
@@ -117,7 +128,7 @@ public class WorkoutLogService {
         WorkoutLog workoutLog = workoutLogRepository.findByIdAndUserWithExerciseLogs(workoutLogId, currentUser)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado com id: " + workoutLogId));
 
-        return mapToResponseDTO(workoutLog);
+        return workoutLogMapper.toDto(workoutLog);
     }
 
     @Transactional(readOnly = true)
@@ -126,41 +137,7 @@ public class WorkoutLogService {
         List<WorkoutLog> logs = workoutLogRepository.findByUserWithExerciseLogs(currentUser);
 
         return logs.stream()
-                .map(this::mapToResponseDTO)
+                .map(workoutLogMapper::toDto)
                 .collect(Collectors.toList());
-    }
-
-    private WorkoutLogResponseDTO mapToResponseDTO(WorkoutLog workoutLog) {
-        Workout workoutTemplate = workoutLog.getWorkout();
-
-        List<WorkoutLogResponseDTO.ExerciseLogResponseDTO> exerciseLogDTOs = workoutLog.getExerciseLogs().stream()
-                .map(log -> {
-                    WorkoutExercise templateExercise = workoutTemplate.getWorkoutExercises().stream()
-                            .filter(we -> we.getExercise().getId().equals(log.getExercise().getId()))
-                            .findFirst()
-                            .orElse(null);
-
-                    return new WorkoutLogResponseDTO.ExerciseLogResponseDTO(
-                            log.getId(),
-                            log.getExerciseName(),
-                            templateExercise != null ? templateExercise.getSets() : null,
-                            templateExercise != null ? templateExercise.getRepsPerSet() : null,
-                            log.getSetsCompleted(),
-                            log.getRepsPerSet(),
-                            log.getWeightUsed()
-                    );
-                })
-                .collect(Collectors.toList());
-
-        return new WorkoutLogResponseDTO(
-                workoutLog.getId(),
-                workoutLog.getWorkoutName(),
-                workoutLog.getStatus(),
-                workoutLog.getStartedAt(),
-                workoutLog.getCompletedAt(),
-                workoutLog.getDurationMinutes(),
-                workoutLog.getTotalVolume(),
-                exerciseLogDTOs
-        );
     }
 }

@@ -4,6 +4,7 @@ import com.musclebuilder.dto.WorkoutCreateDTO;
 import com.musclebuilder.dto.WorkoutResponseDTO;
 import com.musclebuilder.dto.WorkoutUpdateDTO;
 import com.musclebuilder.exception.ResourceNotFoundException;
+import com.musclebuilder.mapper.WorkoutMapper;
 import com.musclebuilder.model.*;
 import com.musclebuilder.repository.ExerciseRepository;
 import com.musclebuilder.repository.UserRepository;
@@ -25,12 +26,14 @@ public class WorkoutService {
     private final WorkoutRepository workoutRepository;
     private final SecurityContextService securityContextService;
     private final ExerciseRepository exerciseRepository;
+    private final WorkoutMapper workoutMapper;
 
     @Autowired
-    public WorkoutService(WorkoutRepository workoutRepository, SecurityContextService securityContextService, ExerciseRepository exerciseRepository) {
+    public WorkoutService(WorkoutRepository workoutRepository, SecurityContextService securityContextService, ExerciseRepository exerciseRepository, WorkoutMapper workoutMapper) {
         this.workoutRepository = workoutRepository;
         this.securityContextService = securityContextService;
         this.exerciseRepository = exerciseRepository;
+        this.workoutMapper = workoutMapper;
     }
 
     @Transactional
@@ -59,14 +62,14 @@ public class WorkoutService {
         });
 
         Workout savedWorkout = workoutRepository.save(newWorkout);
-        return mapToResponseDTO(savedWorkout);
+        return workoutMapper.toDto(savedWorkout);
     }
 
     @Transactional(readOnly = true)
     public List<WorkoutResponseDTO> findWorkoutsForCurrentUser() {
         User currentUser = securityContextService.findCurrentUser();
         return workoutRepository.findByUserOrderByNameAsc(currentUser).stream()
-                .map(this::mapToResponseDTO)
+                .map(workoutMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -75,7 +78,7 @@ public class WorkoutService {
         User currentUser = securityContextService.findCurrentUser();
         Workout workout = workoutRepository.findByIdAndUser(workoutId, currentUser)
                 .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + " não encontrado"));
-        return mapToResponseDTO(workout);
+        return workoutMapper.toDto(workout);
     }
 
     @Transactional
@@ -116,40 +119,6 @@ public class WorkoutService {
 
         Workout updatedWorkout = workoutRepository.save(workoutToUpdate);
 
-        return mapToResponseDTO(updatedWorkout);
-    }
-
-    // MÉTODOS AUXILIARES
-
-    private WorkoutResponseDTO mapToResponseDTO(Workout workout) {
-        List<WorkoutResponseDTO.WorkoutExerciseDTO> exerciseDTOs = workout.getWorkoutExercises().stream()
-                .sorted(Comparator.comparingInt(WorkoutExercise::getOrderPosition))
-                .map(we -> new WorkoutResponseDTO.WorkoutExerciseDTO(
-                        we.getId(),
-                        we.getExercise().getId(),
-                        we.getExercise().getName(),
-                        we.getSets(),
-                        we.getRepsPerSet(),
-                        we.getWeight(),
-                        we.getRestSeconds(),
-                        we.getOrderPosition()
-                ))
-                .collect(Collectors.toList());
-
-        return new WorkoutResponseDTO(
-                workout.getId(),
-                workout.getName(),
-                workout.getDescription(),
-                workout.getWorkoutType(),
-                workout.getUser().getId(),
-                workout.getWeekNumber(),
-                workout.getDayNumber(),
-                workout.getStatus(),
-                workout.getEstimatedDurationMinutes(),
-                workout.getDifficultyLevel(),
-                exerciseDTOs,
-                workout.getCreatedAt(),
-                workout.getUpdatedAt()
-        );
+        return workoutMapper.toDto(updatedWorkout);
     }
 }
