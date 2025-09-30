@@ -8,6 +8,7 @@ import com.musclebuilder.model.*;
 import com.musclebuilder.repository.ExerciseRepository;
 import com.musclebuilder.repository.UserRepository;
 import com.musclebuilder.repository.WorkoutRepository;
+import com.musclebuilder.service.security.SecurityContextService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,19 +23,19 @@ import java.util.stream.Collectors;
 public class WorkoutService {
 
     private final WorkoutRepository workoutRepository;
-    private final UserRepository userRepository;
+    private final SecurityContextService securityContextService;
     private final ExerciseRepository exerciseRepository;
 
     @Autowired
-    public WorkoutService(WorkoutRepository workoutRepository, UserRepository userRepository, ExerciseRepository exerciseRepository) {
+    public WorkoutService(WorkoutRepository workoutRepository, SecurityContextService securityContextService, ExerciseRepository exerciseRepository) {
         this.workoutRepository = workoutRepository;
-        this.userRepository = userRepository;
+        this.securityContextService = securityContextService;
         this.exerciseRepository = exerciseRepository;
     }
 
     @Transactional
     public WorkoutResponseDTO createWorkout(WorkoutCreateDTO dto) {
-        User currentUser = findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
 
         Workout newWorkout = new Workout(
                 dto.name(),
@@ -63,7 +64,7 @@ public class WorkoutService {
 
     @Transactional(readOnly = true)
     public List<WorkoutResponseDTO> findWorkoutsForCurrentUser() {
-        User currentUser = findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
         return workoutRepository.findByUserOrderByNameAsc(currentUser).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
@@ -71,7 +72,7 @@ public class WorkoutService {
 
     @Transactional(readOnly = true)
     public WorkoutResponseDTO findWorkoutsByIdForCurrentUser(Long workoutId) {
-        User currentUser = findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
         Workout workout = workoutRepository.findByIdAndUser(workoutId, currentUser)
                 .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + " não encontrado"));
         return mapToResponseDTO(workout);
@@ -79,7 +80,7 @@ public class WorkoutService {
 
     @Transactional
     public void deleteWorkout(Long workoutId) {
-        User currentUser = findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
         Workout workout = workoutRepository.findByIdAndUser(workoutId, currentUser)
                         .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + "não encontrado para este usuário"));
 
@@ -88,7 +89,7 @@ public class WorkoutService {
 
     @Transactional
     public WorkoutResponseDTO updateWorkout(Long workoutId, WorkoutUpdateDTO dto) {
-        User currentUser = findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
 
         Workout workoutToUpdate = workoutRepository.findByIdAndUser(workoutId, currentUser)
                 .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + " não encontrado para este usuário"));
@@ -119,12 +120,6 @@ public class WorkoutService {
     }
 
     // MÉTODOS AUXILIARES
-
-    private User findCurrentUser() {
-        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário autenticado não encontrado: " + userEmail));
-    }
 
     private WorkoutResponseDTO mapToResponseDTO(Workout workout) {
         List<WorkoutResponseDTO.WorkoutExerciseDTO> exerciseDTOs = workout.getWorkoutExercises().stream()

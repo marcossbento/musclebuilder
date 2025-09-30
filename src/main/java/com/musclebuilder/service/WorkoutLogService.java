@@ -12,6 +12,7 @@ import com.musclebuilder.repository.ExerciseRepository;
 import com.musclebuilder.repository.UserRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
 import com.musclebuilder.repository.WorkoutRepository;
+import com.musclebuilder.service.security.SecurityContextService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -27,21 +28,21 @@ public class WorkoutLogService {
     private final WorkoutLogRepository workoutLogRepository;
     private final WorkoutRepository workoutRepository;
     private final ExerciseRepository exerciseRepository;
-    private final UserService userService;
+    private final SecurityContextService securityContextService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public WorkoutLogService(WorkoutLogRepository workoutLogRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository, GamificationService gamificationService, UserService userService, ApplicationEventPublisher eventPublisher) {
+    public WorkoutLogService(WorkoutLogRepository workoutLogRepository, WorkoutRepository workoutRepository, ExerciseRepository exerciseRepository, GamificationService gamificationService, SecurityContextService securityContextService, ApplicationEventPublisher eventPublisher) {
         this.workoutLogRepository = workoutLogRepository;
         this.workoutRepository = workoutRepository;
         this.exerciseRepository = exerciseRepository;
-        this.userService = userService;
+        this.securityContextService = securityContextService;
         this.eventPublisher = eventPublisher;
     }
 
     @Transactional
     public WorkoutLogResponseDTO startWorkout(StartWorkoutRequest req) {
-        User currentUser = userService.findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
 
         WorkoutLog newLog = new WorkoutLog();
         newLog.setUser(currentUser);
@@ -60,7 +61,7 @@ public class WorkoutLogService {
 
     @Transactional
     public WorkoutLogResponseDTO logExercise(Long workoutLogId, LogExerciseRequest req) {
-        User currentUser = userService.findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
 
         WorkoutLog workoutLog = workoutLogRepository.findById(workoutLogId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado"));
@@ -88,7 +89,7 @@ public class WorkoutLogService {
 
     @Transactional
     public CompleteWorkoutResponseDTO completeWorkout(Long workoutLogId) {
-        User currentUser = userService.findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
 
         WorkoutLog workoutLog = workoutLogRepository.findById(workoutLogId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado"));
@@ -111,7 +112,7 @@ public class WorkoutLogService {
 
     @Transactional(readOnly = true)
     public WorkoutLogResponseDTO getWorkoutLog(Long workoutLogId) {
-        User currentUser = userService.findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
 
         WorkoutLog workoutLog = workoutLogRepository.findByIdAndUserWithExerciseLogs(workoutLogId, currentUser)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado com id: " + workoutLogId));
@@ -121,7 +122,7 @@ public class WorkoutLogService {
 
     @Transactional(readOnly = true)
     public List<WorkoutLogResponseDTO> getAllUserWorkoutLogs() {
-        User currentUser = userService.findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
         List<WorkoutLog> logs = workoutLogRepository.findByUserWithExerciseLogs(currentUser);
 
         return logs.stream()

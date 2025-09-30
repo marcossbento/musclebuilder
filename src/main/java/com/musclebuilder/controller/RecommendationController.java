@@ -5,7 +5,7 @@ import com.musclebuilder.model.User;
 import com.musclebuilder.model.Workout;
 import com.musclebuilder.model.WorkoutExercise;
 import com.musclebuilder.service.RecommendationService;
-import com.musclebuilder.service.UserService;
+import com.musclebuilder.service.security.SecurityContextService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,17 +22,17 @@ import java.util.stream.Collectors;
 public class RecommendationController {
 
     private final RecommendationService recommendationService;
-    private final UserService userService;
+    private final SecurityContextService securityContextService;
 
     @Autowired
-    public RecommendationController(RecommendationService recommendationService, UserService userService) {
+    public RecommendationController(RecommendationService recommendationService, SecurityContextService securityContextService) {
         this.recommendationService = recommendationService;
-        this.userService = userService;
+        this.securityContextService = securityContextService;
     }
 
     @GetMapping("/recommended")
     public ResponseEntity<WorkoutResponseDTO> getRecommendedWorkout() {
-        User currentUser = userService.findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
 
         Optional<Workout> recommendedWorkoutOpt = recommendationService.recommendWorkout(currentUser);
 

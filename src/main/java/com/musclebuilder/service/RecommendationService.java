@@ -40,7 +40,7 @@ public class RecommendationService {
         List<Workout> candidateWorkouts = recommendedTypes
                 .stream()
                 .flatMap(type -> workoutRepository.findByWorkoutType(type).stream())
-                .collect(Collectors.toList());
+                .toList();
 
         if (!candidateWorkouts.isEmpty()) {
             Workout recommendedWorkout = candidateWorkouts.get(random.nextInt(candidateWorkouts.size()));

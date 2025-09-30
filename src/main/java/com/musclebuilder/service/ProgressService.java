@@ -7,6 +7,7 @@ import com.musclebuilder.model.User;
 import com.musclebuilder.model.WorkoutLogStatus;
 import com.musclebuilder.repository.ExerciseLogRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
+import com.musclebuilder.service.security.SecurityContextService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,17 +21,17 @@ public class ProgressService {
 
     private final WorkoutLogRepository workoutLogRepository;
     private final ExerciseLogRepository exerciseLogRepository;
-    private final UserService userService;
+    private final SecurityContextService securityContextService;
 
     @Autowired
-    public ProgressService(WorkoutLogRepository workoutLogRepository, ExerciseLogRepository exerciseLogRepository, UserService userService) {
+    public ProgressService(WorkoutLogRepository workoutLogRepository, ExerciseLogRepository exerciseLogRepository, SecurityContextService securityContextService) {
         this.workoutLogRepository = workoutLogRepository;
         this.exerciseLogRepository = exerciseLogRepository;
-        this.userService = userService;
+        this.securityContextService = securityContextService;
     }
 
     public ProgressSummaryDTO getSummaryForCurrentUser() {
-        User currentUser = userService.findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
         long totalWorkouts = workoutLogRepository.countByUserAndStatus(currentUser, WorkoutLogStatus.COMPLETED);
         Double totalVolume = exerciseLogRepository.findTotalVolumeByUser(currentUser);
         String mostFrequentExercise = exerciseLogRepository.findMostFrequentExerciseByUser(currentUser);
@@ -42,7 +43,7 @@ public class ProgressService {
     }
 
     public List<ExerciseProgressDTO> getExerciseHistoryForCurrentUser(Long exerciseId) {
-        User currentUser = userService.findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
         List<ExerciseLog> history = exerciseLogRepository.findExerciseHistoryForUser(currentUser, exerciseId);
 
         //converte a lista de entidades de log para a lista de DTOs de progresso

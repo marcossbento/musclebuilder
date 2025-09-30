@@ -7,15 +7,11 @@ import com.musclebuilder.repository.WorkoutLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,15 +29,18 @@ public class GamificationService {
     private final MissionCompletionRepository missionCompletionRepository;
     private final List<AchievementChecker> achievementCheckers;
     private final List<MissionChecker> missionCheckers;
-    private final UserService userService;
-
     @Autowired
-    public GamificationService(WorkoutLogRepository workoutLogRepository, MissionCompletionRepository missionCompletionRepository, List<AchievementChecker> achievementCheckers, List<MissionChecker> missionCheckers, UserService userService) {
+    public GamificationService(
+                                WorkoutLogRepository workoutLogRepository,
+                                MissionCompletionRepository missionCompletionRepository,
+                                List<AchievementChecker> achievementCheckers,
+                                List<MissionChecker> missionCheckers,
+                                UserService userService
+    ) {
         this.workoutLogRepository = workoutLogRepository;
         this.missionCompletionRepository = missionCompletionRepository;
         this.achievementCheckers = achievementCheckers;
         this.missionCheckers = missionCheckers;
-        this.userService = userService;
     }
 
     @EventListener

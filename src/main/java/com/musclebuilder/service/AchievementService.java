@@ -3,10 +3,8 @@ package com.musclebuilder.service;
 import com.musclebuilder.model.Achievement;
 import com.musclebuilder.model.User;
 import com.musclebuilder.repository.AchievementRepository;
-import com.musclebuilder.repository.UserRepository;
+import com.musclebuilder.service.security.SecurityContextService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,16 +12,16 @@ import java.util.List;
 @Service
 public class AchievementService {
     private final AchievementRepository achievementRepository;
-    private final UserService userService;
+    private final SecurityContextService securityContextService;
 
     @Autowired
-    public AchievementService(AchievementRepository achievementRepository, UserService userService) {
+    public AchievementService(AchievementRepository achievementRepository, SecurityContextService securityContextService) {
         this.achievementRepository = achievementRepository;
-        this.userService = userService;
+        this.securityContextService = securityContextService;
     }
 
     public List<Achievement> getCurrentUserAchievements() {
-        User user = userService.findCurrentUser();
+        User user = securityContextService.findCurrentUser();
 
         return achievementRepository.findByUser(user);
     }

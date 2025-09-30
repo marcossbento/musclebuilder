@@ -4,47 +4,40 @@ import com.musclebuilder.dto.AchievementDTO;
 import com.musclebuilder.dto.DashboardDTO;
 import com.musclebuilder.dto.MissionProgressDTO;
 import com.musclebuilder.model.User;
-import com.musclebuilder.model.WorkoutLogStatus;
 import com.musclebuilder.repository.AchievementRepository;
-import com.musclebuilder.repository.WorkoutLogRepository;
+import com.musclebuilder.service.security.SecurityContextService;
 import org.springframework.stereotype.Service;
-
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class DashboardService {
 
-    private final UserService userService;
     private final GamificationService gamificationService;
     private final ProgressService progressService;
     private final AchievementRepository achievementRepository;
-    private final WorkoutLogRepository workoutLogRepository;
     private final List<MissionChecker> missionCheckers;
     private final RecommendationService recommendationService;
+    private final SecurityContextService securityContextService;
 
     public DashboardService(UserService userService,
                             GamificationService gamificationService,
                             ProgressService progressService,
                             AchievementRepository achievementRepository,
-                            WorkoutLogRepository workoutLogRepository,
                             List<MissionChecker> missionCheckers,
-                            RecommendationService recommendationService
+                            RecommendationService recommendationService,
+                            SecurityContextService securityContextService
     ) {
-        this.userService = userService;
         this.gamificationService = gamificationService;
         this.progressService = progressService;
         this.achievementRepository = achievementRepository;
-        this.workoutLogRepository = workoutLogRepository;
         this.missionCheckers = missionCheckers;
         this.recommendationService = recommendationService;
+        this.securityContextService = securityContextService;
     }
 
     public DashboardDTO getDashboardData() {
-        User currentUser = userService.findCurrentUser();
+        User currentUser = securityContextService.findCurrentUser();
 
         DashboardDTO.UserLevelDTO userLevel = buildUserLevelDTO(currentUser);
         DashboardDTO.GamificationStatsDTO stats = buildStatsDTO(currentUser);
