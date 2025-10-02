@@ -76,7 +76,7 @@ public class WorkoutService {
     @Transactional(readOnly = true)
     public WorkoutResponseDTO findWorkoutsByIdForCurrentUser(Long workoutId) {
         User currentUser = securityContextService.findCurrentUser();
-        Workout workout = workoutRepository.findByIdAndUser(workoutId, currentUser)
+        Workout workout = workoutRepository.findByIdAndUserWithExercises(workoutId, currentUser)
                 .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + " não encontrado"));
         return workoutMapper.toDto(workout);
     }

@@ -1,23 +1,14 @@
 package com.musclebuilder.service;
 
 import com.musclebuilder.dto.*;
-import com.musclebuilder.exception.ResourceNotFoundException;
-import com.musclebuilder.exception.UnauthorizedAccessException;
 import com.musclebuilder.mapper.UserMapper;
-import com.musclebuilder.model.Achievement;
 import com.musclebuilder.model.User;
-import com.musclebuilder.repository.AchievementRepository;
 import com.musclebuilder.repository.UserRepository;
 import com.musclebuilder.service.security.SecurityContextService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -25,20 +16,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AchievementRepository achievementRepository;
     private final SecurityContextService securityContextService;
     private final UserMapper userMapper;
 
     @Autowired
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       AchievementRepository achievementRepository,
                        SecurityContextService securityContextService,
                        UserMapper userMapper
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.achievementRepository = achievementRepository;
         this.securityContextService = securityContextService;
         this.userMapper = userMapper;
     }
