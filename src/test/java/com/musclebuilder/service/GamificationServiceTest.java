@@ -3,10 +3,8 @@ package com.musclebuilder.service;
 import com.musclebuilder.model.Achievement;
 import com.musclebuilder.model.User;
 import com.musclebuilder.model.WorkoutLogStatus;
-import com.musclebuilder.repository.AchievementRepository;
-import com.musclebuilder.repository.ExerciseLogRepository;
-import com.musclebuilder.repository.UserRepository;
-import com.musclebuilder.repository.WorkoutLogRepository;
+import com.musclebuilder.repository.*;
+import com.musclebuilder.service.achievements.FirstWorkoutAchievementChecker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,26 +12,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class GamificationServiceTest {
 
     @Mock
-    private AchievementRepository achievementRepository;
+    private FirstWorkoutAchievementChecker firstWorkoutAchievementChecker;
 
-    @Mock
-    private WorkoutLogRepository workoutLogRepository;
-
-    @Mock
-    private ExerciseLogRepository exerciseLogRepository;
-
-    @Mock
-    private UserService userService;
-
-    @InjectMocks
     private GamificationService gamificationService;
 
     private User testUser;
@@ -44,56 +35,47 @@ public class GamificationServiceTest {
         testUser.setId(1L);
         testUser.setName("Usuário Teste");
         testUser.setEmail("teste@email.com");
+
+        firstWorkoutAchievementChecker = mock(FirstWorkoutAchievementChecker.class);
+
+        gamificationService = new GamificationService(
+                mock(WorkoutLogRepository.class),
+                mock(MissionCompletionRepository.class),
+                List.of(firstWorkoutAchievementChecker),
+                List.of(),
+                mock(UserService.class)
+        );
     }
 
     @Test
-    void quandoUsuarioCompletaPrimeiroTreino_deveConcederConquista() {
+    void quandoVerificarConquistas_deveChamarTodosOsCheckers() {
+        when(firstWorkoutAchievementChecker.check(testUser)).thenReturn(Optional.empty());
+
+        List<Achievement> newAchievements = gamificationService.checkAndAwardAchievements(testUser);
+
+        verify(firstWorkoutAchievementChecker, times(1)).check(testUser);
+
+        assertTrue(newAchievements.isEmpty());
+    }
+
+    @Test
+    void quandoUmCheckerEncontraUmaConquista_deveRetornarNaLista() {
+
         //ARRANGE
-        when(userService.findCurrentUser()).thenReturn(testUser);
+        Achievement fakeAchievement = new Achievement();
+        fakeAchievement.setName("Primeiro Treino");
 
-        when(achievementRepository.existsByUserAndName(testUser, "Primeiro Treino")).thenReturn(false);
-
-        when(workoutLogRepository.countByUserAndStatus(testUser, WorkoutLogStatus.COMPLETED)).thenReturn(1L);
+        // Ensina o checker a devolver a conquista falsa.
+        when(firstWorkoutAchievementChecker.check(testUser)).thenReturn(Optional.of(fakeAchievement));
 
         //ACT
-        gamificationService.checkAndAwardAchievements();
+        List<Achievement> newAchievements = gamificationService.checkAndAwardAchievements(testUser);
 
         //ASSERT
-        verify(achievementRepository, times(1)).save(any(Achievement.class));
-    }
+        verify(firstWorkoutAchievementChecker, times(1)).check(testUser);
 
-    @Test
-    void quandoUsuarioJaTemConquista_naoDeveConcederNovamente() {
-
-        //ARRANGE
-        when(userService.findCurrentUser()).thenReturn(testUser);
-
-        //Neste teste simula que o user JÁ possui a conquista
-        when(achievementRepository.existsByUserAndName(testUser, "Primeiro Treino")).thenReturn(true);
-
-        //ACT
-        gamificationService.checkAndAwardAchievements();
-
-        //ASSERT - Garante que o save nunca foi chamado.
-        verify(achievementRepository, never()).save(any(Achievement.class));
-
-    }
-
-    @Test
-    void quandoUsuarioAindaNaoCompletouTreino_naoDeveConcederConquista() {
-
-        //ARRANGE
-        when(userService.findCurrentUser()).thenReturn(testUser);
-        when(achievementRepository.existsByUserAndName(testUser, "Primeiro Treino")).thenReturn(false);
-
-        // Simula que tem 0 treinos completos.
-        when(workoutLogRepository.countByUserAndStatus(testUser, WorkoutLogStatus.COMPLETED)).thenReturn(0L);
-
-        //ACT
-        gamificationService.checkAndAwardAchievements();
-
-        //ASSERT
-        verify(achievementRepository, never()).save(any(Achievement.class));
+        assertFalse(newAchievements.isEmpty());
+        assertTrue(newAchievements.contains(fakeAchievement));
 
     }
 }

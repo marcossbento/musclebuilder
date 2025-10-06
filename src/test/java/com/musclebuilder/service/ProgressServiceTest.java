@@ -5,6 +5,7 @@ import com.musclebuilder.model.User;
 import com.musclebuilder.model.WorkoutLogStatus;
 import com.musclebuilder.repository.ExerciseLogRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
+import com.musclebuilder.service.security.SecurityContextService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +26,7 @@ public class ProgressServiceTest {
     private ExerciseLogRepository exerciseLogRepository;
 
     @Mock
-    private UserService userService;
+    private SecurityContextService securityContextService;
 
     @InjectMocks
     private ProgressService progressService;
@@ -43,7 +44,7 @@ public class ProgressServiceTest {
     @Test
     void quandoGetSummaryForCurrentUser_deveRetornarResumoCorreto() {
         //ARRANGE
-        when(userService.findCurrentUser()).thenReturn(testUser);
+        when(securityContextService.findCurrentUser()).thenReturn(testUser);
 
         when(workoutLogRepository.countByUserAndStatus(testUser, WorkoutLogStatus.COMPLETED))
                 .thenReturn(15L);
@@ -67,7 +68,7 @@ public class ProgressServiceTest {
     @Test
     void quandoNaoHaDados_getSummary_ForUser_deveRetornarValoresPadrao() {
         //ARRANGE
-        when(userService.findCurrentUser()).thenReturn(testUser);
+        when(securityContextService.findCurrentUser()).thenReturn(testUser);
 
         when(workoutLogRepository.countByUserAndStatus(testUser, WorkoutLogStatus.COMPLETED))
                 .thenReturn(0L);

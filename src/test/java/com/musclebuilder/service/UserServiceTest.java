@@ -2,8 +2,10 @@ package com.musclebuilder.service;
 
 import com.musclebuilder.dto.UserDTO;
 import com.musclebuilder.dto.UserRegistrationDTO;
+import com.musclebuilder.mapper.UserMapper;
 import com.musclebuilder.model.User;
 import com.musclebuilder.repository.UserRepository;
+import com.musclebuilder.service.security.SecurityContextService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +27,12 @@ class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private UserMapper userMapper;
+
+    @Mock
+    private SecurityContextService securityContextService;
+
     @InjectMocks
     private UserService userService;
 
@@ -43,6 +51,10 @@ class UserServiceTest {
             return user;
         });
 
+        UserDTO expectedDto = new UserDTO(1L, "Usuário teste", "teste@email.com", "180cm", "80kg", "Hipertrofia");
+
+        when(userMapper.toDto(any(User.class))).thenReturn(expectedDto);
+
         //ACT(Ação)
 
         UserDTO resultDTO = userService.registerUser(registrationDTO);
@@ -56,6 +68,9 @@ class UserServiceTest {
 
         //Verifica se o método save foi chamado exatamente uma vez pelo Repo.
         verify(userRepository, times(1)).save(any(User.class));
+
+        //Garante que o mapper foi chamado.
+        verify(userMapper, times(1)).toDto(any(User.class));
     }
 
 }

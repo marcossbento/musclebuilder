@@ -44,7 +44,7 @@ public class WorkoutLogRepositoryTest {
 
         testExercise = new Exercise();
         testExercise.setName("Supino Reto Teste");
-        testExercise.setMuscleGroup("Peito");
+        testExercise.setMuscleGroup(MuscleGroup.CHEST);
         testExercise.setDifficultyLevel(DifficultyLevel.INTERMEDIATE);
         testExercise = entityManager.persistAndFlush(testExercise);
     }
