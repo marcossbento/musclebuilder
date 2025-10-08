@@ -103,10 +103,16 @@ public class DashboardService {
     private Optional<DashboardDTO.RecommendedWorkoutDTO> findRecommendedWorkout(User user) {
         return recommendationService.recommendWorkout(user)
                 .map(workout -> {
+                    long estimatedXp = gamificationService.calculateXpForWorkout(user, workout);
+
+                    int exerciseCount = workout.getWorkoutExercises().size();
+
                     return new DashboardDTO.RecommendedWorkoutDTO(
                             workout.getId(),
                             workout.getName(),
-                            workout.getDescription()
+                            workout.getDescription(),
+                            estimatedXp,
+                            exerciseCount
                     );
                 });
     }

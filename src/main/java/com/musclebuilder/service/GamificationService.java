@@ -94,52 +94,41 @@ public class GamificationService {
                 .collect(Collectors.toList());
     }
 
-    public void awardXpForWorkout(User user, WorkoutLog workoutLog) {
+    public long calculateXpForWorkout(User user, Workout workout) {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
 
         long workoutCompletedTodayCount = workoutLogRepository.countByUserAndStatusAndCompletedAtAfter(user, WorkoutLogStatus.COMPLETED, startOfDay);
 
-        double dailyXpModifier = 0;
-        switch ((int) workoutCompletedTodayCount) {
-            case 1: // Caso seja o primeiro treino do dia
-                dailyXpModifier = 1.0;
-                break;
-            case 2: // Caso seja o segundo treino do dia
-                dailyXpModifier = 0.5;
-                break;
-            default: // Caso seja o terceiro ou mais
-                dailyXpModifier = 0.1;
-                break;
-        }
+        double dailyXpModifier = getDailyXpModifier(workoutCompletedTodayCount);
 
-        long actualVolumeXp = 0;
-        if (workoutLog.getTotalVolume() != null && workoutLog.getTotalVolume() > 0) {
-            actualVolumeXp = (long) (workoutLog.getTotalVolume() * XP_PER_VOLUME_UNIT);
-        }
+        double estimatedVolume = workout.getWorkoutExercises().stream()
+                .mapToDouble(we -> (we.getWeight() != null ? we.getWeight() : 0.0) * we.getSets() * we.getRepsPerSet())
+                .sum();
 
-        // Cálculo do teto do XP proveniente do volume
-        long volumeXpCap = (long) (XP_PER_WORKOUT * VOLUME_XP_CAP_RATIO);
-        // O XP final proveniente do volume é o MENOR valor entre o que o usuário fez e o teto
-        long finalVolumeXp = Math.min(actualVolumeXp, volumeXpCap);
+        return calculateFinalXp(dailyXpModifier, estimatedVolume);
+    }
 
-        long totalBaseXp = XP_PER_WORKOUT + finalVolumeXp;
+    public void awardXpForWorkout(User user, WorkoutLog workoutLog) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        long workoutCompletedTodayCount = workoutLogRepository.countByUserAndStatusAndCompletedAtAfter(user, WorkoutLogStatus.COMPLETED, startOfDay);
 
-        long xpGained = (long) (totalBaseXp * dailyXpModifier);
+        double dailyXpModifier = getDailyXpModifier(workoutCompletedTodayCount);
+
+        double actualVolume = (workoutLog.getTotalVolume() != null) ? workoutLog.getTotalVolume() : 0.0;
+
+        long xpGained = calculateFinalXp(dailyXpModifier, actualVolume);
 
         logger.info(
-                "---------------------------------------------------------" +
-                        "Concedendo {} XP para o usuário {} (Base: {}, Volume: {}/{} capped, Modificador Diário: {}%) " +
-                        "----------------------------------------------------------------",
+                "Concedendo {} XP para o utilizador {} (Modificador Diário: {}%, Volume Real: {})",
                 xpGained,
                 user.getEmail(),
-                XP_PER_WORKOUT,
-                finalVolumeXp,
-                actualVolumeXp,
-                (int)(dailyXpModifier * 100)
+                (int)(dailyXpModifier * 100),
+                actualVolume
         );
-        user.setExperiencePoints(user.getExperiencePoints() + xpGained);
 
+        user.setExperiencePoints(user.getExperiencePoints() + xpGained);
         checkLevelUp(user);
     }
 
@@ -196,5 +185,25 @@ public class GamificationService {
         }
 
         return streak;
+    }
+
+    private long calculateFinalXp(double dailyXpModifier, double volume) {
+        long actualVolumeXp = (long) (volume * XP_PER_VOLUME_UNIT);
+        long volumeXpCap = (long) (XP_PER_WORKOUT * VOLUME_XP_CAP_RATIO);
+        long finalVolumeXp = Math.min(actualVolumeXp, volumeXpCap);
+
+        long totalBaseXp = XP_PER_WORKOUT + finalVolumeXp;
+        return (long) (totalBaseXp * dailyXpModifier);
+    }
+
+    private double getDailyXpModifier(long workoutCount) {
+        switch ((int) workoutCount) {
+            case 1: // Caso seja o primeiro treino do dia
+                return 1.0;
+            case 2: // Caso seja o segundo treino do dia
+                return 0.5;
+            default: // Caso seja o terceiro e adiante
+                return 0.1;
+        }
     }
 }

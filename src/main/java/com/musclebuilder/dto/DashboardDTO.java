@@ -31,6 +31,8 @@ public record DashboardDTO(
     public record RecommendedWorkoutDTO(
             Long workoutId,
             String name,
-            String description
+            String description,
+            Long estimatedXp,
+            Integer exerciseCount
     ) {}
 }
