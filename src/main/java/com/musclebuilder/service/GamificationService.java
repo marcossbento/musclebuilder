@@ -100,7 +100,9 @@ public class GamificationService {
 
         long workoutCompletedTodayCount = workoutLogRepository.countByUserAndStatusAndCompletedAtAfter(user, WorkoutLogStatus.COMPLETED, startOfDay);
 
-        double dailyXpModifier = getDailyXpModifier(workoutCompletedTodayCount);
+        long nextWorkoutNumber = workoutCompletedTodayCount + 1;
+
+        double dailyXpModifier = getDailyXpModifier(nextWorkoutNumber);
 
         double estimatedVolume = workout.getWorkoutExercises().stream()
                 .mapToDouble(we -> (we.getWeight() != null ? we.getWeight() : 0.0) * we.getSets() * we.getRepsPerSet())
@@ -197,13 +199,12 @@ public class GamificationService {
     }
 
     private double getDailyXpModifier(long workoutCount) {
-        switch ((int) workoutCount) {
-            case 1: // Caso seja o primeiro treino do dia
-                return 1.0;
-            case 2: // Caso seja o segundo treino do dia
-                return 0.5;
-            default: // Caso seja o terceiro e adiante
-                return 0.1;
+        if (workoutCount <= 1) {
+            return 1.0;
         }
+        if (workoutCount == 2) {
+            return 0.5;
+        }
+        return 0.1;
     }
 }
