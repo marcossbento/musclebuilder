@@ -45,14 +45,12 @@ public class DashboardService {
         List<MissionProgressDTO> activeMissions = buildWeeklyMissionList(currentUser);
 
         Optional<DashboardDTO.RecommendedWorkoutDTO> recommendedWorkout = findRecommendedWorkout(currentUser);
-        Optional<AchievementDTO> lastAchievement = findLastAchievement(currentUser);
 
         return new DashboardDTO(
                 userLevel,
                 stats,
                 activeMissions,
-                recommendedWorkout,
-                lastAchievement
+                recommendedWorkout
         );
     }
 
@@ -81,11 +79,13 @@ public class DashboardService {
     private DashboardDTO.GamificationStatsDTO buildStatsDTO(User user) {
         var summary = progressService.getSummaryForCurrentUser();
         int streak = gamificationService.calculateWorkoutStreak(user);
+        long achievementCount = achievementRepository.countByUser(user);
 
         return new DashboardDTO.GamificationStatsDTO(
                 summary.totalWorkouts(),
                 summary.totalVolume(),
-                streak
+                streak,
+                achievementCount
         );
     }
 

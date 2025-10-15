@@ -13,6 +13,8 @@ public interface AchievementRepository extends JpaRepository<Achievement, Long> 
 
     List<Achievement> findByUser(User user);
 
+    long countByUser(User user);
+
     boolean existsByUserAndName(User user, String achievementName);
 
     Optional<Achievement> findFirstByUserOrderByEarnedAtDesc(User user);

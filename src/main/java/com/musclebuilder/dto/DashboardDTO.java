@@ -10,9 +10,7 @@ public record DashboardDTO(
 
         List<MissionProgressDTO> activeMissions,
 
-        Optional<RecommendedWorkoutDTO> recommendedWorkout,
-
-        Optional<AchievementDTO> lastAchievement
+        Optional<RecommendedWorkoutDTO> recommendedWorkout
 ) {
 
     public record UserLevelDTO(
@@ -25,7 +23,8 @@ public record DashboardDTO(
     public record GamificationStatsDTO(
             long totalWorkouts,
             double totalVolume,
-            int streak
+            int streak,
+            long achievementsCount
     ) {}
 
     public record RecommendedWorkoutDTO(
