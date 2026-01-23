@@ -3,6 +3,8 @@ package com.musclebuilder.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -27,8 +29,8 @@ public class ExerciseLog {
     @Column(name = "sets_completed", nullable = false)
     private Integer setsCompleted;
 
-    @Column(name = "reps_per_set", nullable = false)
-    private String repsPerSet;
+    @OneToMany(mappedBy = "exerciseLog", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ExerciseSet> exerciseSets;
 
     @Column(name = "weight_used")
     private Double weightUsed;
@@ -66,15 +68,21 @@ public class ExerciseLog {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public ExerciseLog() {}
+    public ExerciseLog() {
+    }
 
-    public ExerciseLog(final Long id, final WorkoutLog workoutLog, final Exercise exercise, final String exerciseName, final Integer setsCompleted, final String repsPerSet, final Double weightUsed, final Integer restSeconds, final Double volume, final Double maxWeight, final Integer totalReps, final Integer orderPosition, final String notes, final Integer difficultyRating, final LocalDateTime startedAt, final LocalDateTime completedAt, final LocalDateTime createdAt, final LocalDateTime updatedAt) {
+    public ExerciseLog(Long id, WorkoutLog workoutLog, Exercise exercise, String exerciseName,
+                       Integer setsCompleted, List<ExerciseSet> exerciseSets, Double weightUsed,
+                       Integer restSeconds, Double volume, Double maxWeight, Integer totalReps,
+                       Integer orderPosition, String notes, Integer difficultyRating,
+                       LocalDateTime startedAt, LocalDateTime completedAt,
+                       LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.workoutLog = workoutLog;
         this.exercise = exercise;
         this.exerciseName = exerciseName;
         this.setsCompleted = setsCompleted;
-        this.repsPerSet = repsPerSet;
+        this.exerciseSets = exerciseSets != null ? exerciseSets : new ArrayList<>();
         this.weightUsed = weightUsed;
         this.restSeconds = restSeconds;
         this.volume = volume;
@@ -87,6 +95,52 @@ public class ExerciseLog {
         this.completedAt = completedAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    private void calculateMetrics() {
+        if (exerciseSets != null && !exerciseSets.isEmpty()) {
+            this.totalReps = exerciseSets.stream()
+                    .mapToInt(ExerciseSet::getReps)
+                    .sum();
+
+            this.volume = exerciseSets.stream()
+                    .mapToDouble(set -> set.getReps() * (set.getWeight() != null ? set.getWeight() : 0.0))
+                    .sum();
+
+            this.maxWeight = exerciseSets.stream()
+                    .mapToDouble(set -> set.getWeight() != null ? set.getWeight() : 0.0)
+                    .max()
+                    .orElse(0.0);
+        }
+    }
+
+    public void addSet(int reps, Double weight) {
+        if (this.exerciseSets == null) {
+            this.exerciseSets = new ArrayList<>();
+        }
+
+        ExerciseSet newSet = new ExerciseSet();
+        newSet.setReps(reps);
+        newSet.setWeight(weight);
+        newSet.setOrderIndex(this.exerciseSets.size() + 1);
+        newSet.setExerciseLog(this);
+
+        this.exerciseSets.add(newSet);
+
+        calculateMetrics();
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        calculateMetrics();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+        calculateMetrics();
     }
 
     public Long getId() {
@@ -129,12 +183,12 @@ public class ExerciseLog {
         this.setsCompleted = setsCompleted;
     }
 
-    public String getRepsPerSet() {
-        return this.repsPerSet;
+    public List<ExerciseSet> getExerciseSets() {
+        return exerciseSets;
     }
 
-    public void setRepsPerSet(final String repsPerSet) {
-        this.repsPerSet = repsPerSet;
+    public void setExerciseSets(List<ExerciseSet> exerciseSets) {
+        this.exerciseSets = exerciseSets;
     }
 
     public Double getWeightUsed() {
@@ -234,103 +288,29 @@ public class ExerciseLog {
     }
 
     @Override
-    public boolean equals(final Object o) {
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        final ExerciseLog that = (ExerciseLog) o;
-
-        // Se ambos têm ID, use o ID
-        if (id != null && that.id != null) {
-            return Objects.equals(id, that.id);
-        }
-
-        // Caso contrário, use a combinação única de negócio
-        return Objects.equals(workoutLog != null ? workoutLog.getId() : null,
-                        that.workoutLog != null ? that.workoutLog.getId() : null) &&
-                Objects.equals(exercise != null ? exercise.getId() : null,
-                        that.exercise != null ? that.exercise.getId() : null) &&
-                Objects.equals(orderPosition, that.orderPosition);
+        ExerciseLog that = (ExerciseLog) o;
+        if (id != null && that.id != null) return Objects.equals(id, that.id);
+        return Objects.equals(orderPosition, that.orderPosition) &&
+                Objects.equals(exercise, that.exercise) &&
+                Objects.equals(workoutLog, that.workoutLog);
     }
 
     @Override
     public int hashCode() {
-
-        if (id != null) {
-            return Objects.hash(id);
-        }
-
-        return Objects.hash(
-                workoutLog != null ? workoutLog.getId() : null,
-                exercise != null ? exercise.getId() : null,
-                orderPosition
-        );
+        return getClass().hashCode();
     }
 
     @Override
     public String toString() {
         return "ExerciseLog{" +
                 "id=" + id +
-                ", workoutLogId=" + (workoutLog != null ? workoutLog.getId() : null) +
-                ", exerciseId=" + (exercise != null ? exercise.getId() : null) +
                 ", exerciseName='" + exerciseName + '\'' +
-                ", setsCompleted=" + setsCompleted +
-                ", repsPerSet='" + repsPerSet + '\'' +
-                ", weightUsed=" + weightUsed +
-                ", volume=" + volume +
                 ", totalReps=" + totalReps +
-                ", orderPosition=" + orderPosition +
-                ", difficultyRating=" + difficultyRating +
-                ", createdAt=" + createdAt +
+                ", volume=" + volume +
                 '}';
     }
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        calculateMetrics();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-        calculateMetrics();
-    }
-
-    private void calculateMetrics() {
-        if (repsPerSet != null && !repsPerSet.isEmpty()) {
-            String[] reps = repsPerSet.split(",");
-            this.totalReps = 0;
-            this.maxWeight = this.weightUsed;
-
-            for (String rep : reps) {
-                try {
-                    this.totalReps += Integer.parseInt(rep.trim());
-                } catch (NumberFormatException e) {
-
-                }
-            }
-            //Volume = peso X reps totais
-            if (weightUsed != null && totalReps != null) {
-                this.volume = weightUsed * totalReps;
-            }
-        }
-    }
-
-    public void addSet(int reps, Double weight) {
-        if (this.repsPerSet == null || this.repsPerSet.isEmpty()) {
-            this.repsPerSet = String.valueOf(reps);
-        } else {
-            this.repsPerSet += "," + reps;
-        }
-
-        if (weight != null) {
-            if(this.maxWeight == null || weight > this.maxWeight) {
-                this.maxWeight = weight;
-            }
-            this.weightUsed = weight;
-        }
-
-        calculateMetrics();
-    }
 }
