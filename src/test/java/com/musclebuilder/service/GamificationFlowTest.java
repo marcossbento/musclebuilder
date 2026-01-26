@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.test.context.ActiveProfiles;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -26,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@ActiveProfiles("test")
 public class GamificationFlowTest {
 
     @Autowired
@@ -55,16 +57,16 @@ public class GamificationFlowTest {
 
         // NOVO: Simulamos uma requisição POST para INICIAR o treino
         MvcResult startResult = mockMvc.perform(post("/api/workout-logs/start")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(startRequest)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(startRequest)))
                 .andExpect(status().isCreated()) // Esperamos um 201 Created
                 .andReturn(); // Pegamos o resultado da requisição
 
-        // NOVO: Extraímos o ID do treino que acabamos de criar a partir da resposta JSON
+        // NOVO: Extraímos o ID do treino que acabamos de criar a partir da resposta
+        // JSON
         String responseBody = startResult.getResponse().getContentAsString();
         WorkoutLogResponseDTO startedLog = objectMapper.readValue(responseBody, WorkoutLogResponseDTO.class);
         Long workoutLogId = startedLog.id();
-
 
         // --- 2. AÇÃO (Act) ---
 
@@ -82,8 +84,9 @@ public class GamificationFlowTest {
         assertThat(xpFinal).isGreaterThan(xpInicial);
 
         // Agora podemos até fazer um cálculo exato!
-        // O treino "Push/Pull Padrão" não tem volume inicial, então o XP ganho deve ser exatamente 100.
-        long xpEsperado = xpInicial + 100; // 100 (fixo) + 0 (volume)
+        // O treino "Push/Pull Padrão" não tem volume inicial, então o XP ganho deve ser
+        // exatamente 100.
+        long xpEsperado = xpInicial + 150; // 150 (fixo) + 0 (volume)
         assertThat(xpFinal).isEqualTo(xpEsperado);
     }
 
@@ -105,7 +108,8 @@ public class GamificationFlowTest {
         // Nível 2: 1000 XP
         // Nível 3: 2500 XP (500 * (3-1)^2 + 1000 * (3-1)) = 500*4 + 2000 = 4000
         // XP total final: 900 (inicial) + 3000 (ganho) = 3900
-        // Com 3900 de XP total, ele deve ser nível 2, pois não atingiu os 4000 para o nível 3.
+        // Com 3900 de XP total, ele deve ser nível 2, pois não atingiu os 4000 para o
+        // nível 3.
         // Vamos ajustar o ganho para 3100 XP para garantir a subida para o nível 3
         long xpGained = 3100L;
 
@@ -131,7 +135,8 @@ public class GamificationFlowTest {
 
         // Verificação 1: O usuário subiu para o nível correto?
         // XP total: 900 + 3100 = 4000.
-        // Nível 3 requer 2500 XP, Nível 4 requer 5000 XP. Com 4000, ele deve ser Nível 3.
+        // Nível 3 requer 2500 XP, Nível 4 requer 5000 XP. Com 4000, ele deve ser Nível
+        // 3.
         assertThat(dashboard.userLevel().level()).isEqualTo(3);
 
         // Verificação 2: A barra de progresso está correta?
@@ -147,6 +152,7 @@ public class GamificationFlowTest {
 
         System.out.println("Teste de Level Up Múltiplo passou com sucesso!");
         System.out.println("Nível final: " + dashboard.userLevel().level());
-        System.out.println("Progresso na barra: " + dashboard.userLevel().currentXp() + " / " + dashboard.userLevel().xpForNextLevel());
+        System.out.println("Progresso na barra: " + dashboard.userLevel().currentXp() + " / "
+                + dashboard.userLevel().xpForNextLevel());
     }
 }

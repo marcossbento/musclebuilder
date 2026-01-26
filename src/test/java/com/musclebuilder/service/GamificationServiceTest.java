@@ -43,8 +43,7 @@ public class GamificationServiceTest {
                 mock(MissionCompletionRepository.class),
                 List.of(firstWorkoutAchievementChecker),
                 List.of(),
-                mock(UserService.class)
-        );
+                mock(com.musclebuilder.config.GamificationProperties.class));
     }
 
     @Test
@@ -61,17 +60,17 @@ public class GamificationServiceTest {
     @Test
     void quandoUmCheckerEncontraUmaConquista_deveRetornarNaLista() {
 
-        //ARRANGE
+        // ARRANGE
         Achievement fakeAchievement = new Achievement();
         fakeAchievement.setName("Primeiro Treino");
 
         // Ensina o checker a devolver a conquista falsa.
         when(firstWorkoutAchievementChecker.check(testUser)).thenReturn(Optional.of(fakeAchievement));
 
-        //ACT
+        // ACT
         List<Achievement> newAchievements = gamificationService.checkAndAwardAchievements(testUser);
 
-        //ASSERT
+        // ASSERT
         verify(firstWorkoutAchievementChecker, times(1)).check(testUser);
 
         assertFalse(newAchievements.isEmpty());

@@ -1,5 +1,6 @@
 package com.musclebuilder.service;
 
+import com.musclebuilder.config.GamificationProperties;
 import com.musclebuilder.event.WorkoutCompletedEvent;
 import com.musclebuilder.model.*;
 import com.musclebuilder.repository.MissionCompletionRepository;
@@ -20,27 +21,24 @@ import java.util.stream.Collectors;
 public class GamificationService {
     private static final Logger logger = LoggerFactory.getLogger(GamificationService.class);
 
-    // Constantes de XP distribuídos por ação do user
-    private static final long XP_PER_WORKOUT = 150;
-    private static final double XP_PER_VOLUME_UNIT = 0.5;
-    private static final double VOLUME_XP_CAP_RATIO = 2.0;
-
     private final WorkoutLogRepository workoutLogRepository;
     private final MissionCompletionRepository missionCompletionRepository;
     private final List<AchievementChecker> achievementCheckers;
     private final List<MissionChecker> missionCheckers;
+    private final GamificationProperties gamificationProperties;
+
     @Autowired
     public GamificationService(
-                                WorkoutLogRepository workoutLogRepository,
-                                MissionCompletionRepository missionCompletionRepository,
-                                List<AchievementChecker> achievementCheckers,
-                                List<MissionChecker> missionCheckers,
-                                UserService userService
-    ) {
+            WorkoutLogRepository workoutLogRepository,
+            MissionCompletionRepository missionCompletionRepository,
+            List<AchievementChecker> achievementCheckers,
+            List<MissionChecker> missionCheckers,
+            GamificationProperties gamificationProperties) {
         this.workoutLogRepository = workoutLogRepository;
         this.missionCompletionRepository = missionCompletionRepository;
         this.achievementCheckers = achievementCheckers;
         this.missionCheckers = missionCheckers;
+        this.gamificationProperties = gamificationProperties;
     }
 
     @EventListener
@@ -69,19 +67,18 @@ public class GamificationService {
             missionCompletionRepository.saveAll(completionRecords);
 
             logger.info("Missões concluídas: {}. Recompensa total: {} XP",
-                        completedMissions.stream().map(MissionChecker::getMissionId).collect(Collectors.joining(", ")),
-                        totalMissionXp
-                    );
+                    completedMissions.stream().map(MissionChecker::getMissionId).collect(Collectors.joining(", ")),
+                    totalMissionXp);
         }
 
-    if (totalMissionXp > 0) {
-        user.setExperiencePoints(user.getExperiencePoints() + totalMissionXp);
-    }
+        if (totalMissionXp > 0) {
+            user.setExperiencePoints(user.getExperiencePoints() + totalMissionXp);
+        }
 
-    List<Achievement> newAchievements = checkAndAwardAchievements(user);
-    event.addAchievements(newAchievements);
+        List<Achievement> newAchievements = checkAndAwardAchievements(user);
+        event.addAchievements(newAchievements);
 
-    checkLevelUp(user);
+        checkLevelUp(user);
 
     }
 
@@ -98,7 +95,8 @@ public class GamificationService {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
 
-        long workoutCompletedTodayCount = workoutLogRepository.countByUserAndStatusAndCompletedAtAfter(user, WorkoutLogStatus.COMPLETED, startOfDay);
+        long workoutCompletedTodayCount = workoutLogRepository.countByUserAndStatusAndCompletedAtAfter(user,
+                WorkoutLogStatus.COMPLETED, startOfDay);
 
         long nextWorkoutNumber = workoutCompletedTodayCount + 1;
 
@@ -114,7 +112,8 @@ public class GamificationService {
     public void awardXpForWorkout(User user, WorkoutLog workoutLog) {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
-        long workoutCompletedTodayCount = workoutLogRepository.countByUserAndStatusAndCompletedAtAfter(user, WorkoutLogStatus.COMPLETED, startOfDay);
+        long workoutCompletedTodayCount = workoutLogRepository.countByUserAndStatusAndCompletedAtAfter(user,
+                WorkoutLogStatus.COMPLETED, startOfDay);
 
         double dailyXpModifier = getDailyXpModifier(workoutCompletedTodayCount);
 
@@ -126,15 +125,15 @@ public class GamificationService {
                 "Concedendo {} XP para o utilizador {} (Modificador Diário: {}%, Volume Real: {})",
                 xpGained,
                 user.getEmail(),
-                (int)(dailyXpModifier * 100),
-                actualVolume
-        );
+                (int) (dailyXpModifier * 100),
+                actualVolume);
 
         user.setExperiencePoints(user.getExperiencePoints() + xpGained);
         checkLevelUp(user);
     }
 
-    // Cálculo de XP necessário para próximo nível, resultado exponencial conforme o nível
+    // Cálculo de XP necessário para próximo nível, resultado exponencial conforme o
+    // nível
     public long getTotalXpForLevel(int level) {
         if (level <= 1) {
             return 0;
@@ -155,7 +154,8 @@ public class GamificationService {
     }
 
     public int calculateWorkoutStreak(User user) {
-        List<WorkoutLog> completedLogs = workoutLogRepository.findByUserAndStatusOrderByCompletedAtDesc(user, WorkoutLogStatus.COMPLETED);
+        List<WorkoutLog> completedLogs = workoutLogRepository.findByUserAndStatusOrderByCompletedAtDesc(user,
+                WorkoutLogStatus.COMPLETED);
 
         if (completedLogs.isEmpty()) {
             return 0;
@@ -190,21 +190,25 @@ public class GamificationService {
     }
 
     private long calculateFinalXp(double dailyXpModifier, double volume) {
-        long actualVolumeXp = (long) (volume * XP_PER_VOLUME_UNIT);
-        long volumeXpCap = (long) (XP_PER_WORKOUT * VOLUME_XP_CAP_RATIO);
+        long xpPerWorkout = gamificationProperties.getXpPerWorkout();
+        double xpPerVolumeUnit = gamificationProperties.getXpPerVolumeUnit();
+        double volumeXpCapRatio = gamificationProperties.getVolumeXpCapRatio();
+
+        long actualVolumeXp = (long) (volume * xpPerVolumeUnit);
+        long volumeXpCap = (long) (xpPerWorkout * volumeXpCapRatio);
         long finalVolumeXp = Math.min(actualVolumeXp, volumeXpCap);
 
-        long totalBaseXp = XP_PER_WORKOUT + finalVolumeXp;
+        long totalBaseXp = xpPerWorkout + finalVolumeXp;
         return (long) (totalBaseXp * dailyXpModifier);
     }
 
     private double getDailyXpModifier(long workoutCount) {
         if (workoutCount <= 1) {
-            return 1.0;
+            return gamificationProperties.getDailyModifier().getFirstWorkout();
         }
         if (workoutCount == 2) {
-            return 0.5;
+            return gamificationProperties.getDailyModifier().getSecondWorkout();
         }
-        return 0.1;
+        return gamificationProperties.getDailyModifier().getSubsequentWorkouts();
     }
 }
