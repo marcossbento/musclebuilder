@@ -23,8 +23,19 @@ public record WorkoutLogResponseDTO(
        Integer targetSets,
        Integer targetReps,
 
-       Integer setsCompleted,
-       String repsPerSet,
-       Double weightUsed
+       Integer totalReps,
+       Double volume,
+       Double maxWeight,
+
+       List<ExerciseSetResponseDTO> sets,
+
+       String notes
+    ) {}
+
+    public record ExerciseSetResponseDTO(
+            Long id,
+            Integer reps,
+            Double weight,
+            Integer orderIndex
     ) {}
 }

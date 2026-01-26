@@ -1,9 +1,6 @@
 package com.musclebuilder.service;
 
-import com.musclebuilder.dto.CompleteWorkoutResponseDTO;
-import com.musclebuilder.dto.LogExerciseRequest;
-import com.musclebuilder.dto.StartWorkoutRequest;
-import com.musclebuilder.dto.WorkoutLogResponseDTO;
+import com.musclebuilder.dto.*;
 import com.musclebuilder.event.WorkoutCompletedEvent;
 import com.musclebuilder.exception.ResourceNotFoundException;
 import com.musclebuilder.exception.UnauthorizedAccessException;
@@ -38,7 +35,6 @@ public class WorkoutLogService {
                                 WorkoutLogRepository workoutLogRepository,
                                 WorkoutRepository workoutRepository,
                                 ExerciseRepository exerciseRepository,
-                                GamificationService gamificationService,
                                 SecurityContextService securityContextService,
                                 ApplicationEventPublisher eventPublisher,
                                 WorkoutLogMapper workoutLogMapper
@@ -85,12 +81,16 @@ public class WorkoutLogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Exercício não encontrado"));
 
         ExerciseLog newExerciseLog = new ExerciseLog();
+        newExerciseLog.setWorkoutLog(workoutLog);
         newExerciseLog.setExercise(exercise);
         newExerciseLog.setExerciseName(exercise.getName());
-        newExerciseLog.setSetsCompleted(req.setsCompleted());
-        newExerciseLog.setRepsPerSet(req.repsPerSet());
-        newExerciseLog.setWeightUsed(req.weightUsed());
         newExerciseLog.setNotes(req.notes());
+
+        if (req.sets() != null) {
+            for (ExerciseSetRequest setRequest : req.sets()) {
+                newExerciseLog.addSet(setRequest.reps(), setRequest.weight());
+            }
+        }
 
         workoutLog.addExerciseLog(newExerciseLog);
 

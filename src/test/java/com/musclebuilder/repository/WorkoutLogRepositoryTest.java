@@ -32,7 +32,7 @@ public class WorkoutLogRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        //User de teste
+        // User de teste
         testUser = new User();
         testUser.setName("João Teste");
         testUser.setEmail("joao@teste.com");
@@ -66,17 +66,18 @@ public class WorkoutLogRepositoryTest {
         // ACT
         WorkoutLog savedLog = workoutLogRepository.save(workoutLog);
 
-        //ASSERT
+        // ASSERT
         assertThat(savedLog).isNotNull();
         assertThat(savedLog.getId()).isNotNull();
         assertThat(savedLog.getUser().getId()).isEqualTo(testUser.getId());
         assertThat(savedLog.getCreatedAt()).isNotNull();
 
     }
+
     @Test
     @DisplayName("Deve encontrar os workoutLogs de um usuário de forma paginada e ordenada")
     void deveEncontrarWorkoutLogsPorUsuarioComPaginacao() {
-        //ARRANGE - Criar múltiplos logs para o mesmo usuário
+        // ARRANGE - Criar múltiplos logs para o mesmo usuário
         WorkoutLog log1 = new WorkoutLog();
         log1.setUser(testUser);
         log1.setWorkoutName("Treino A - Mais Antigo");
@@ -116,7 +117,9 @@ public class WorkoutLogRepositoryTest {
         exerciseLog.setExercise(testExercise);
         exerciseLog.setExerciseName("Remada Curvada");
         exerciseLog.setSetsCompleted(3);
-        exerciseLog.setRepsPerSet("10,10,10");
+        exerciseLog.addSet(10, 50.0);
+        exerciseLog.addSet(10, 50.0);
+        exerciseLog.addSet(10, 50.0);
 
         workoutLog.addExerciseLog(exerciseLog);
         entityManager.persistAndFlush(workoutLog);
@@ -134,6 +137,5 @@ public class WorkoutLogRepositoryTest {
         ExerciseLog retrievedExerciseLog = firstLog.getExerciseLogs().get(0);
         assertThat(retrievedExerciseLog.getExerciseName()).isEqualTo("Remada Curvada");
     }
-
 
 }
