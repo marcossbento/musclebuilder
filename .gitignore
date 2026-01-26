@@ -34,3 +34,6 @@ build/
 
 # IntelliJ IDEA specific files
 .idea/
+
+# Antigravity 
+.antigravity/

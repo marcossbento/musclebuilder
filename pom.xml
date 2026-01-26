@@ -12,7 +12,7 @@
 	<artifactId>musclebuilder-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>musclebuilder-api</name>
-	<description>API para aplicação de acompanhamento de treinos MuscleBuilder</description>
+	<description>API para aplicacao de acompanhamento de treinos MuscleBuilder</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -29,6 +29,8 @@
 	<properties>
 		<java.version>17</java.version>
 		<org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
 	<dependencies>
 		<!-- Core Spring Boot Starters -->
