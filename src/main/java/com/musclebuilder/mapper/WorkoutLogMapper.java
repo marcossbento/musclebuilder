@@ -8,15 +8,37 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
-public interface WorkoutLogMapper {
+public abstract class WorkoutLogMapper {
 
-    WorkoutLogResponseDTO toDto(WorkoutLog workoutLog);
+    public abstract WorkoutLogResponseDTO toDto(WorkoutLog workoutLog);
 
-    WorkoutLogResponseDTO.ExerciseSetResponseDTO toSetDto(ExerciseSet entity);
+    public abstract WorkoutLogResponseDTO.ExerciseSetResponseDTO toSetDto(ExerciseSet entity);
 
     @Mapping(source = "exerciseSets", target = "sets")
-    @Mapping(target = "targetSets", ignore = true)
-    @Mapping(target = "targetReps", ignore = true)
-    WorkoutLogResponseDTO.ExerciseLogResponseDTO toExerciseLogDto(ExerciseLog entity);
+    @Mapping(target = "targetSets", expression = "java(findTargetSets(entity))")
+    @Mapping(target = "targetReps", expression = "java(findTargetReps(entity))")
+    public abstract WorkoutLogResponseDTO.ExerciseLogResponseDTO toExerciseLogDto(ExerciseLog entity);
+
+    protected Integer findTargetSets(ExerciseLog entity) {
+        if (entity.getWorkoutLog() == null || entity.getWorkoutLog().getWorkout() == null) {
+            return null;
+        }
+        return entity.getWorkoutLog().getWorkout().getWorkoutExercises().stream()
+                .filter(we -> we.getExercise().equals(entity.getExercise()))
+                .findFirst()
+                .map(com.musclebuilder.model.WorkoutExercise::getSets)
+                .orElse(null);
+    }
+
+    protected Integer findTargetReps(ExerciseLog entity) {
+        if (entity.getWorkoutLog() == null || entity.getWorkoutLog().getWorkout() == null) {
+            return null;
+        }
+        return entity.getWorkoutLog().getWorkout().getWorkoutExercises().stream()
+                .filter(we -> we.getExercise().equals(entity.getExercise()))
+                .findFirst()
+                .map(com.musclebuilder.model.WorkoutExercise::getRepsPerSet)
+                .orElse(null);
+    }
 
 }

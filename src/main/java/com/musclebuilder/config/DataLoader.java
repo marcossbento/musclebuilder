@@ -144,6 +144,15 @@ public class DataLoader implements CommandLineRunner {
         // dia vazio)
         WorkoutLog historicalLog = new WorkoutLog();
         historicalLog.setUser(user);
+
+        // Linkar a um treino existente para teste de recomendações
+        if (workoutRepository.count() > 0) {
+            workoutRepository.findAll().stream()
+                    .filter(w -> w.getName().contains("Full Body"))
+                    .findFirst()
+                    .ifPresent(historicalLog::setWorkout);
+        }
+
         historicalLog.setWorkoutName("Primeiro Treino Teste");
         historicalLog.setStatus(WorkoutLogStatus.COMPLETED);
         historicalLog.setStartedAt(LocalDateTime.now().minusDays(1).minusHours(1));

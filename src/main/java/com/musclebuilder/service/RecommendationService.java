@@ -23,17 +23,19 @@ public class RecommendationService {
     }
 
     public Optional<Workout> recommendWorkout(User user) {
-        Optional<WorkoutLog> lastWorkoutLogOpt = workoutLogRepository.findFirstByUserAndStatusOrderByCompletedAtDesc(user, WorkoutLogStatus.COMPLETED);
+        Optional<WorkoutLog> lastWorkoutLogOpt = workoutLogRepository
+                .findFirstByUserAndStatusOrderByCompletedAtDesc(user, WorkoutLogStatus.COMPLETED);
 
         if (lastWorkoutLogOpt.isEmpty()) {
             return recommendForNewUser();
         }
 
-        WorkoutType lastWorkoutType = lastWorkoutLogOpt.get().getWorkout().getWorkoutType();
-
-        if (lastWorkoutType == null) {
+        WorkoutLog lastLog = lastWorkoutLogOpt.get();
+        if (lastLog.getWorkout() == null || lastLog.getWorkout().getWorkoutType() == null) {
             return recommendForNewUser();
         }
+
+        WorkoutType lastWorkoutType = lastLog.getWorkout().getWorkoutType();
 
         List<WorkoutType> recommendedTypes = getNextRecommendedTypes(lastWorkoutType);
 
@@ -54,7 +56,7 @@ public class RecommendationService {
         List<Workout> fullBodyWorkouts = workoutRepository.findByWorkoutType(WorkoutType.FULL_BODY);
 
         if (!fullBodyWorkouts.isEmpty()) {
-           return Optional.of(fullBodyWorkouts.get(random.nextInt(fullBodyWorkouts.size())));
+            return Optional.of(fullBodyWorkouts.get(random.nextInt(fullBodyWorkouts.size())));
         }
 
         return Optional.empty();

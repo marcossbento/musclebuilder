@@ -32,13 +32,12 @@ public class WorkoutLogService {
 
     @Autowired
     public WorkoutLogService(
-                                WorkoutLogRepository workoutLogRepository,
-                                WorkoutRepository workoutRepository,
-                                ExerciseRepository exerciseRepository,
-                                SecurityContextService securityContextService,
-                                ApplicationEventPublisher eventPublisher,
-                                WorkoutLogMapper workoutLogMapper
-    ){
+            WorkoutLogRepository workoutLogRepository,
+            WorkoutRepository workoutRepository,
+            ExerciseRepository exerciseRepository,
+            SecurityContextService securityContextService,
+            ApplicationEventPublisher eventPublisher,
+            WorkoutLogMapper workoutLogMapper) {
         this.workoutLogRepository = workoutLogRepository;
         this.workoutRepository = workoutRepository;
         this.exerciseRepository = exerciseRepository;
@@ -102,7 +101,7 @@ public class WorkoutLogService {
     public CompleteWorkoutResponseDTO completeWorkout(Long workoutLogId) {
         User currentUser = securityContextService.findCurrentUser();
 
-        WorkoutLog workoutLog = workoutLogRepository.findById(workoutLogId)
+        WorkoutLog workoutLog = workoutLogRepository.findByIdAndUserWithExerciseLogs(workoutLogId, currentUser)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado"));
 
         if (!workoutLog.getUser().equals(currentUser)) {
@@ -126,7 +125,8 @@ public class WorkoutLogService {
         User currentUser = securityContextService.findCurrentUser();
 
         WorkoutLog workoutLog = workoutLogRepository.findByIdAndUserWithExerciseLogs(workoutLogId, currentUser)
-                .orElseThrow(() -> new ResourceNotFoundException("Registro de treino não encontrado com id: " + workoutLogId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Registro de treino não encontrado com id: " + workoutLogId));
 
         return workoutLogMapper.toDto(workoutLog);
     }

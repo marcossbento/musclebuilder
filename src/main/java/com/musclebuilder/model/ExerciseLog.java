@@ -27,10 +27,10 @@ public class ExerciseLog {
     private String exerciseName;
 
     @Column(name = "sets_completed", nullable = false)
-    private Integer setsCompleted;
+    private Integer setsCompleted = 0;
 
     @OneToMany(mappedBy = "exerciseLog", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ExerciseSet> exerciseSets;
+    private List<ExerciseSet> exerciseSets = new ArrayList<>();
 
     @Column(name = "weight_used")
     private Double weightUsed;
@@ -72,11 +72,11 @@ public class ExerciseLog {
     }
 
     public ExerciseLog(Long id, WorkoutLog workoutLog, Exercise exercise, String exerciseName,
-                       Integer setsCompleted, List<ExerciseSet> exerciseSets, Double weightUsed,
-                       Integer restSeconds, Double volume, Double maxWeight, Integer totalReps,
-                       Integer orderPosition, String notes, Integer difficultyRating,
-                       LocalDateTime startedAt, LocalDateTime completedAt,
-                       LocalDateTime createdAt, LocalDateTime updatedAt) {
+            Integer setsCompleted, List<ExerciseSet> exerciseSets, Double weightUsed,
+            Integer restSeconds, Double volume, Double maxWeight, Integer totalReps,
+            Integer orderPosition, String notes, Integer difficultyRating,
+            LocalDateTime startedAt, LocalDateTime completedAt,
+            LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.workoutLog = workoutLog;
         this.exercise = exercise;
@@ -126,6 +126,7 @@ public class ExerciseLog {
         newSet.setExerciseLog(this);
 
         this.exerciseSets.add(newSet);
+        this.setsCompleted = this.exerciseSets.size(); // Keep legacy field in sync
 
         calculateMetrics();
     }
@@ -289,10 +290,13 @@ public class ExerciseLog {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         ExerciseLog that = (ExerciseLog) o;
-        if (id != null && that.id != null) return Objects.equals(id, that.id);
+        if (id != null && that.id != null)
+            return Objects.equals(id, that.id);
         return Objects.equals(orderPosition, that.orderPosition) &&
                 Objects.equals(exercise, that.exercise) &&
                 Objects.equals(workoutLog, that.workoutLog);

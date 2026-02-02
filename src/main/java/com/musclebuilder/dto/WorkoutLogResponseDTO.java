@@ -6,36 +6,37 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record WorkoutLogResponseDTO(
-        Long id,
-        String workoutName,
-        WorkoutLogStatus status,
-        LocalDateTime startedAt,
-        LocalDateTime completedAt,
-        Integer durationMinutes,
-        Double totalVolume,
-        List<ExerciseLogResponseDTO> exerciseLogs
-) {
-    //Record aninhado para os detalhes de cada exercício registrado
-    public record ExerciseLogResponseDTO(
-       Long id,
-       String exerciseName,
+                Long id,
+                String workoutName,
+                WorkoutLogStatus status,
+                LocalDateTime startedAt,
+                LocalDateTime completedAt,
+                Integer durationMinutes,
+                Double totalVolume,
+                List<ExerciseLogResponseDTO> exerciseLogs) {
+        // Record aninhado para os detalhes de cada exercício registrado
+        public record ExerciseLogResponseDTO(
+                        Long id,
+                        String exerciseName,
 
-       Integer targetSets,
-       Integer targetReps,
+                        Integer targetSets,
+                        Integer targetReps,
 
-       Integer totalReps,
-       Double volume,
-       Double maxWeight,
+                        Integer setsCompleted,
+                        Integer totalReps,
+                        Double volume,
+                        Double maxWeight,
+                        Double weightUsed,
 
-       List<ExerciseSetResponseDTO> sets,
+                        List<ExerciseSetResponseDTO> sets,
 
-       String notes
-    ) {}
+                        String notes) {
+        }
 
-    public record ExerciseSetResponseDTO(
-            Long id,
-            Integer reps,
-            Double weight,
-            Integer orderIndex
-    ) {}
+        public record ExerciseSetResponseDTO(
+                        Long id,
+                        Integer reps,
+                        Double weight,
+                        Integer orderIndex) {
+        }
 }

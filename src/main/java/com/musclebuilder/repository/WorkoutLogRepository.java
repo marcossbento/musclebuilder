@@ -34,7 +34,7 @@ public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, Long> {
     @Query("SELECT wl FROM WorkoutLog wl LEFT JOIN FETCH wl.exerciseLogs WHERE wl.user = :user")
     List<WorkoutLog> findByUserWithExerciseLogs(@Param("user") User user);
 
-    @Query("SELECT wl FROM WorkoutLog wl LEFT JOIN FETCH wl.exerciseLogs WHERE wl.id = :id AND wl.user = :user")
+    @Query("SELECT wl FROM WorkoutLog wl LEFT JOIN FETCH wl.exerciseLogs el WHERE wl.id = :id AND wl.user = :user")
     Optional<WorkoutLog> findByIdAndUserWithExerciseLogs(@Param("id") Long id, @Param("user") User user);
 
 }
