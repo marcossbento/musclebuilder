@@ -14,7 +14,7 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/workouts")
+@RequestMapping("/api/workouts")
 public class WorkoutController {
 
     private final WorkoutService workoutService;
