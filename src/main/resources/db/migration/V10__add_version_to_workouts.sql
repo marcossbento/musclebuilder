@@ -1,0 +1,1 @@
+ALTER TABLE workouts ADD COLUMN version INTEGER DEFAULT 0;

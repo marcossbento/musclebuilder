@@ -57,6 +57,9 @@ public class Workout {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Version
+    private Integer version;
+
     public Workout() {}
 
     public Workout(String name, String description, User user, DifficultyLevel difficultyLevel) {
