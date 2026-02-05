@@ -58,7 +58,7 @@ public class Workout {
     private LocalDateTime updatedAt;
 
     @Version
-    private Integer version;
+    private Long version;
 
     public Workout() {}
 
@@ -196,6 +196,14 @@ public class Workout {
 
     public void setUpdatedAt(final LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     @Override
