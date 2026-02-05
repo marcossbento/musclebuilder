@@ -55,6 +55,9 @@ public class WorkoutLog {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Version
+    private Long version;
+
     public WorkoutLog() {}
 
     public WorkoutLog(final Long id, final User user, final Workout workout, final String workoutName, final LocalDateTime startedAt, final LocalDateTime completedAt, final Integer durationMinutes, final Double totalVolume, final String notes, final WorkoutLogStatus status, final List<ExerciseLog> exerciseLogs, final LocalDateTime createdAt, final LocalDateTime updatedAt) {
@@ -177,7 +180,13 @@ public class WorkoutLog {
         this.updatedAt = updatedAt;
     }
 
+    public Long getVersion() {
+        return version;
+    }
 
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
     //Métodos auxiliares para configuração do relacionamento bidirecional
     public void addExerciseLog(ExerciseLog exerciseLog) {

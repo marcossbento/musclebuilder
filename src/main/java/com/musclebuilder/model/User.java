@@ -48,6 +48,9 @@ public class User {
     @Column(name = "user_level", nullable = false, columnDefinition = "INTEGER DEFAULT 1")
     private Integer level = 1;
 
+    @Version
+    private Long version;
+
     public User() {
     }
 
@@ -158,6 +161,14 @@ public class User {
 
     public void setLevel(Integer level) {
         this.level = level;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     @PrePersist
