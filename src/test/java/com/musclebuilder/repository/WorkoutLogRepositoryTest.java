@@ -4,7 +4,6 @@ import com.musclebuilder.AbstractIntegrationTest;
 import com.musclebuilder.model.*;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -23,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-public class WorkoutLogRepositoryTest extends AbstractIntegrationTest {
+class WorkoutLogRepositoryTest extends AbstractIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;

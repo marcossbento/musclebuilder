@@ -7,7 +7,6 @@ import com.musclebuilder.exception.UnauthorizedAccessException;
 import com.musclebuilder.mapper.WorkoutLogMapper;
 import com.musclebuilder.model.*;
 import com.musclebuilder.repository.ExerciseRepository;
-import com.musclebuilder.repository.UserRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
 import com.musclebuilder.repository.WorkoutRepository;
 import com.musclebuilder.service.security.SecurityContextService;
@@ -16,9 +15,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class WorkoutLogService {
@@ -138,6 +135,6 @@ public class WorkoutLogService {
 
         return logs.stream()
                 .map(workoutLogMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

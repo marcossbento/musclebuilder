@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,12 +20,9 @@ public class WorkoutLogController {
 
     private final WorkoutLogService workoutLogService;
 
-    private final UserService userService;
-
     @Autowired
     public WorkoutLogController(WorkoutLogService workoutLogService, UserService userService) {
         this.workoutLogService = workoutLogService;
-        this.userService = userService;
     }
 
     @PostMapping("/start")

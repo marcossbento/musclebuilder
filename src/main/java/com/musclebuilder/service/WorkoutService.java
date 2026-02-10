@@ -7,21 +7,20 @@ import com.musclebuilder.exception.ResourceNotFoundException;
 import com.musclebuilder.mapper.WorkoutMapper;
 import com.musclebuilder.model.*;
 import com.musclebuilder.repository.ExerciseRepository;
-import com.musclebuilder.repository.UserRepository;
 import com.musclebuilder.repository.WorkoutRepository;
 import com.musclebuilder.service.security.SecurityContextService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class WorkoutService {
+
+    private static final String WORKOUT_NOT_FOUND_MESSAGE = "Treino não encontrado com ID: ";
+    private static final String EXERCISE_NOT_FOUND_MESSAGE = "Exercício não encontrado com ID: ";
 
     private final WorkoutRepository workoutRepository;
     private final SecurityContextService securityContextService;
@@ -49,7 +48,7 @@ public class WorkoutService {
 
         dto.exercises().forEach(exerciseDto -> {
             Exercise exercise = exerciseRepository.findById(exerciseDto.exerciseId())
-                    .orElseThrow(() -> new EntityNotFoundException("Exercício com ID " + exerciseDto.exerciseId() + " não encontrado"));
+                    .orElseThrow(() -> new EntityNotFoundException(EXERCISE_NOT_FOUND_MESSAGE + exerciseDto.exerciseId()));
 
             newWorkout.addExercise(
                     exercise,
@@ -70,14 +69,14 @@ public class WorkoutService {
         User currentUser = securityContextService.findCurrentUser();
         return workoutRepository.findByUserOrderByNameAsc(currentUser).stream()
                 .map(workoutMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public WorkoutResponseDTO findWorkoutsByIdForCurrentUser(Long workoutId) {
         User currentUser = securityContextService.findCurrentUser();
         Workout workout = workoutRepository.findByIdAndUserWithExercises(workoutId, currentUser)
-                .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + " não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException(WORKOUT_NOT_FOUND_MESSAGE+ workoutId));
         return workoutMapper.toDto(workout);
     }
 
@@ -85,7 +84,7 @@ public class WorkoutService {
     public void deleteWorkout(Long workoutId) {
         User currentUser = securityContextService.findCurrentUser();
         Workout workout = workoutRepository.findByIdAndUser(workoutId, currentUser)
-                        .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + "não encontrado para este usuário"));
+                        .orElseThrow(() -> new ResourceNotFoundException(WORKOUT_NOT_FOUND_MESSAGE + workoutId));
 
         workoutRepository.delete(workout);
     }
@@ -95,7 +94,7 @@ public class WorkoutService {
         User currentUser = securityContextService.findCurrentUser();
 
         Workout workoutToUpdate = workoutRepository.findByIdAndUser(workoutId, currentUser)
-                .orElseThrow(() -> new ResourceNotFoundException("Treino com ID " + workoutId + " não encontrado para este usuário"));
+                .orElseThrow(() -> new ResourceNotFoundException(WORKOUT_NOT_FOUND_MESSAGE + workoutId));
 
         workoutToUpdate.setName(dto.name());
         workoutToUpdate.setDescription(dto.description());
@@ -105,7 +104,7 @@ public class WorkoutService {
 
         dto.exercises().forEach(exerciseDto -> {
             Exercise exercise = exerciseRepository.findById(exerciseDto.exerciseId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Exercício com ID " + exerciseDto.exerciseId() + " não encontrado."));
+                    .orElseThrow(() -> new ResourceNotFoundException(EXERCISE_NOT_FOUND_MESSAGE + exerciseDto.exerciseId()));
 
             workoutToUpdate.addExercise(
                     exercise,
