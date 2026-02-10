@@ -3,6 +3,7 @@ package com.musclebuilder.controller.handler;
 import com.musclebuilder.dto.ApiErrorResponse;
 import com.musclebuilder.exception.ResourceNotFoundException;
 import com.musclebuilder.exception.UnauthorizedAccessException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -19,12 +20,14 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String ERROR_KEY = "error";
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, WebRequest request) {
 
         ApiErrorResponse errorResponse = new ApiErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
-                Map.of("error", ex.getMessage()),
+                Map.of(ERROR_KEY, ex.getMessage()),
                 request.getDescription(false),
                 LocalDateTime.now());
 
@@ -38,7 +41,7 @@ public class GlobalExceptionHandler {
 
         ApiErrorResponse errorResponse = new ApiErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),
-                Map.of("error", ex.getMessage()),
+                Map.of(ERROR_KEY, ex.getMessage()),
                 request.getDescription(false),
                 LocalDateTime.now());
 
@@ -50,7 +53,7 @@ public class GlobalExceptionHandler {
             WebRequest request) {
 
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
+        ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
@@ -71,10 +74,21 @@ public class GlobalExceptionHandler {
 
         ApiErrorResponse errorResponse = new ApiErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
-                Map.of("error", "Malformed JSON request or invalid data type"),
+                Map.of(ERROR_KEY, "Malformed JSON request or invalid data type"),
                 request.getDescription(false),
                 LocalDateTime.now());
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    public ResponseEntity<ApiErrorResponse> handleOptimisticLockException(OptimisticLockingFailureException ex, WebRequest request) {
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                Map.of(ERROR_KEY, "O registro foi atualizado por outro usuário ou processo, recarregue a página e tente novamente"),
+                request.getDescription(false),
+                LocalDateTime.now());
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 }
