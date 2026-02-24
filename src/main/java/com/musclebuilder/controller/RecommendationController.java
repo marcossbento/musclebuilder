@@ -4,7 +4,6 @@ import com.musclebuilder.dto.WorkoutResponseDTO;
 import com.musclebuilder.mapper.WorkoutMapper;
 import com.musclebuilder.model.User;
 import com.musclebuilder.model.Workout;
-import com.musclebuilder.model.WorkoutExercise;
 import com.musclebuilder.service.RecommendationService;
 import com.musclebuilder.service.security.SecurityContextService;
 import org.springframework.beans.factory.annotation.Autowired;

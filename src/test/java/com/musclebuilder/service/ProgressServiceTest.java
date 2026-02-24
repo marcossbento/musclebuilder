@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class ProgressServiceTest {
+class ProgressServiceTest {
 
     @Mock
     private WorkoutLogRepository workoutLogRepository;
@@ -75,14 +75,14 @@ public class ProgressServiceTest {
         when(exerciseLogRepository.findTotalVolumeByUser(testUser))
                 .thenReturn(0.0);
         when(exerciseLogRepository.findMostFrequentExerciseByUser(testUser))
-                .thenReturn(null);;
+                .thenReturn(null);
 
         //ACT
         ProgressSummaryDTO summary = progressService.getSummaryForCurrentUser();
 
         //ASSERT
         assertThat(summary).isNotNull();
-        assertThat(summary.totalWorkouts()).isEqualTo(0L);
+        assertThat(summary.totalWorkouts()).isZero();
         assertThat(summary.totalVolume()).isEqualTo(0.0);
         assertThat(summary.mostFrequentExercise()).isNull();
 

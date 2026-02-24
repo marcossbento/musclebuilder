@@ -10,7 +10,7 @@ public abstract class AbstractAchievementChecker {
 
     protected final AchievementRepository achievementRepository;
 
-    public AbstractAchievementChecker(AchievementRepository achievementRepository) {
+    protected AbstractAchievementChecker(AchievementRepository achievementRepository) {
         this.achievementRepository = achievementRepository;
     }
 

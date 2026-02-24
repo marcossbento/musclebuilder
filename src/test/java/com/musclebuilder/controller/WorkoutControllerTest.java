@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(WorkoutController.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class WorkoutControllerTest {
+class WorkoutControllerTest {
 
     @Autowired
     private MockMvc mockMvc; // Simula reqs HTTP

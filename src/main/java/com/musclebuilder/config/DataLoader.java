@@ -134,7 +134,7 @@ public class DataLoader implements CommandLineRunner {
         fullBodyWorkout.addExercise(exercisesByName.get("Remada Curvada"), 3, 12, 40.0, 90, 3);
 
         workoutRepository.saveAll(List.of(pushWorkout, pullWorkout, legsWorkout, fullBodyWorkout));
-        ;
+
     }
 
     private void loadHistory(User user, Map<String, Exercise> exercisesByName) {

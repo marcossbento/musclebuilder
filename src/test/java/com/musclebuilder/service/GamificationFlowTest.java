@@ -6,7 +6,6 @@ import com.musclebuilder.dto.StartWorkoutRequest;
 import com.musclebuilder.dto.WorkoutLogResponseDTO;
 import com.musclebuilder.model.User;
 import com.musclebuilder.repository.UserRepository;
-import com.musclebuilder.service.GamificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 @ActiveProfiles("test")
-public class GamificationFlowTest {
+class GamificationFlowTest {
 
     @Autowired
     private MockMvc mockMvc;

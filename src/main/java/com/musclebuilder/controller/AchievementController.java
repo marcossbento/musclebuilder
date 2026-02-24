@@ -15,7 +15,7 @@ public class AchievementController {
 
     private final AchievementService achievementService;
 
-    private AchievementController(AchievementService achievementService) {
+    public AchievementController(AchievementService achievementService) {
         this.achievementService = achievementService;
     }
 

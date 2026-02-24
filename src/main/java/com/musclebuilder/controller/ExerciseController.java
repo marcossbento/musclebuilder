@@ -2,7 +2,6 @@ package com.musclebuilder.controller;
 
 import com.musclebuilder.dto.ExerciseDTO;
 import com.musclebuilder.model.MuscleGroup;
-import com.musclebuilder.repository.ExerciseRepository;
 import com.musclebuilder.service.ExerciseService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

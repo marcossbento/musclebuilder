@@ -2,13 +2,11 @@ package com.musclebuilder.service;
 
 import com.musclebuilder.model.Achievement;
 import com.musclebuilder.model.User;
-import com.musclebuilder.model.WorkoutLogStatus;
 import com.musclebuilder.repository.*;
 import com.musclebuilder.service.achievements.FirstWorkoutAchievementChecker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -20,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class GamificationServiceTest {
+class GamificationServiceTest {
 
     @Mock
     private FirstWorkoutAchievementChecker firstWorkoutAchievementChecker;
