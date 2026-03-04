@@ -66,9 +66,13 @@ public class GamificationService {
 
             missionCompletionRepository.saveAll(completionRecords);
 
-            logger.info("Missões concluídas: {}. Recompensa total: {} XP",
-                    completedMissions.stream().map(MissionChecker::getMissionId).collect(Collectors.joining(", ")),
-                    totalMissionXp);
+            if(logger.isInfoEnabled()) {
+                String missionIds = completedMissions.stream()
+                        .map(MissionChecker::getMissionId)
+                        .collect(Collectors.joining(", "));
+
+                logger.info("Missões concluídas: {}. Recompensa total: {} XP", missionIds, totalMissionXp);
+            }
         }
 
         if (totalMissionXp > 0) {
@@ -136,9 +140,12 @@ public class GamificationService {
     // nível
     public long getTotalXpForLevel(int level) {
         if (level <= 1) {
-            return 0;
+            return 0L;
         }
-        return (long) (500 * Math.pow(level - 1, 2) + 1000L * (level - 1));
+
+        long levelOffset = (long) level - 1;
+
+        return (500L * levelOffset * levelOffset) + (1000L * levelOffset);
     }
 
     public void checkLevelUp(User user) {
