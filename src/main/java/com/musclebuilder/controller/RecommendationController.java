@@ -35,12 +35,7 @@ public class RecommendationController {
         Optional<Workout> recommendedWorkoutOpt = recommendationService.recommendWorkout(currentUser);
 
         return recommendedWorkoutOpt
-                .map(workout -> {
-                    WorkoutResponseDTO responseDTO = workoutMapper.toDto(workout);
-                    return ResponseEntity.ok(responseDTO);
-                })
-                .orElseGet(() -> {
-                    return ResponseEntity.notFound().build();
-                });
+                .map(workout -> ResponseEntity.ok(workoutMapper.toDto(workout)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
