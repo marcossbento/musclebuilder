@@ -1,6 +1,7 @@
 package com.musclebuilder.service.security;
 
 import com.musclebuilder.exception.ResourceNotFoundException;
+import com.musclebuilder.exception.TokenRefreshException;
 import com.musclebuilder.model.RefreshToken;
 import com.musclebuilder.model.User;
 import com.musclebuilder.repository.RefreshTokenRepository;
@@ -21,12 +22,10 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
-    private final JwtService jwtService;
 
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserRepository userRepository, JwtService jwtService) {
+    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserRepository userRepository) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.userRepository = userRepository;
-        this.jwtService = jwtService;
     }
 
     public Optional<RefreshToken> findByToken(String token) {
@@ -37,7 +36,7 @@ public class RefreshTokenService {
         if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
             refreshTokenRepository.delete(token);
 
-            throw new RuntimeException(token.getToken() + " Refresh token expirou. Faça outro pedido de login");
+            throw new TokenRefreshException(token.getToken(), " Refresh token expirou. Faça outro pedido de login");
         }
         return token;
     }

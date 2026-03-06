@@ -2,6 +2,7 @@ package com.musclebuilder.controller.handler;
 
 import com.musclebuilder.dto.ApiErrorResponse;
 import com.musclebuilder.exception.ResourceNotFoundException;
+import com.musclebuilder.exception.TokenRefreshException;
 import com.musclebuilder.exception.UnauthorizedAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,6 +93,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(OptimisticLockingFailureException.class)
     public ResponseEntity<ApiErrorResponse> handleOptimisticLockException(OptimisticLockingFailureException ex, WebRequest request) {
 
         log.warn("Conflito de concorrência detectado: ", ex);
@@ -104,4 +106,18 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(TokenRefreshException.class)
+    public ResponseEntity<ApiErrorResponse> handleTokenRefreshException(TokenRefreshException ex, WebRequest request) {
+        log.warn("Erro de atualização de token: {}", ex.getMessage());
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                Map.of(ERROR_KEY, ex.getMessage()),
+                request.getDescription(false),
+                LocalDateTime.now());
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
 }
