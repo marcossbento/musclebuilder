@@ -19,8 +19,8 @@ public class SecurityContextService {
     public User findCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username;
-        if (principal instanceof UserDetails) {
-            username = ((UserDetails) principal).getUsername();
+        if (principal instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
         } else {
             username = principal.toString();
         }
