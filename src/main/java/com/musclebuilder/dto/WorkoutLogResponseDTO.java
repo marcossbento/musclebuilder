@@ -2,6 +2,7 @@ package com.musclebuilder.dto;
 
 import com.musclebuilder.model.WorkoutLogStatus;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,7 +31,9 @@ public record WorkoutLogResponseDTO(
 
                         List<ExerciseSetResponseDTO> sets,
 
-                        String notes) {
+                        String notes,
+
+                        LastPerformanceDTO lastPerformance) {
         }
 
         public record ExerciseSetResponseDTO(
@@ -38,5 +41,11 @@ public record WorkoutLogResponseDTO(
                         Integer reps,
                         Double weight,
                         Integer orderIndex) {
+        }
+
+        public record LastPerformanceDTO(
+                        Double maxWeight,
+                        Integer totalReps,
+                        LocalDate date) {
         }
 }
