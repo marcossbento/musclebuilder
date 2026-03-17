@@ -4,6 +4,7 @@ import com.musclebuilder.model.Achievement;
 import com.musclebuilder.model.User;
 import com.musclebuilder.repository.*;
 import com.musclebuilder.service.achievements.FirstWorkoutAchievementChecker;
+import com.musclebuilder.service.achievements.PersonalRecordAchievementChecker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,9 +40,11 @@ class GamificationServiceTest {
         gamificationService = new GamificationService(
                 mock(WorkoutLogRepository.class),
                 mock(MissionCompletionRepository.class),
+                mock(ExerciseLogRepository.class),
                 List.of(firstWorkoutAchievementChecker),
                 List.of(),
-                mock(com.musclebuilder.config.GamificationProperties.class));
+                mock(com.musclebuilder.config.GamificationProperties.class),
+                mock(PersonalRecordAchievementChecker.class));
     }
 
     @Test

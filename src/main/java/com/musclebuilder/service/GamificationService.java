@@ -3,8 +3,10 @@ package com.musclebuilder.service;
 import com.musclebuilder.config.GamificationProperties;
 import com.musclebuilder.event.WorkoutCompletedEvent;
 import com.musclebuilder.model.*;
+import com.musclebuilder.repository.ExerciseLogRepository;
 import com.musclebuilder.repository.MissionCompletionRepository;
 import com.musclebuilder.repository.WorkoutLogRepository;
+import com.musclebuilder.service.achievements.PersonalRecordAchievementChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,22 +25,28 @@ public class GamificationService {
 
     private final WorkoutLogRepository workoutLogRepository;
     private final MissionCompletionRepository missionCompletionRepository;
+    private final ExerciseLogRepository exerciseLogRepository;
     private final List<AchievementChecker> achievementCheckers;
     private final List<MissionChecker> missionCheckers;
     private final GamificationProperties gamificationProperties;
+    private final PersonalRecordAchievementChecker personalRecordAchievementChecker;
 
     @Autowired
     public GamificationService(
             WorkoutLogRepository workoutLogRepository,
             MissionCompletionRepository missionCompletionRepository,
+            ExerciseLogRepository exerciseLogRepository,
             List<AchievementChecker> achievementCheckers,
             List<MissionChecker> missionCheckers,
-            GamificationProperties gamificationProperties) {
+            GamificationProperties gamificationProperties,
+            PersonalRecordAchievementChecker personalRecordAchievementChecker) {
         this.workoutLogRepository = workoutLogRepository;
         this.missionCompletionRepository = missionCompletionRepository;
+        this.exerciseLogRepository = exerciseLogRepository;
         this.achievementCheckers = achievementCheckers;
         this.missionCheckers = missionCheckers;
         this.gamificationProperties = gamificationProperties;
+        this.personalRecordAchievementChecker = personalRecordAchievementChecker;
     }
 
     @EventListener
@@ -48,6 +56,16 @@ public class GamificationService {
         User user = completedLog.getUser();
 
         awardXpForWorkout(user, completedLog);
+
+        // --- Detecção de Personal Records (PR) ---
+        int prCount = detectAndRewardPersonalRecords(user, completedLog);
+        event.setPersonalRecordsCount(prCount);
+
+        if (prCount > 0) {
+            // Conceder conquista "Recordista Pessoal" se ainda não possui
+            personalRecordAchievementChecker.awardIfEligible(user)
+                    .ifPresent(achievement -> event.addAchievements(List.of(achievement)));
+        }
 
         List<MissionChecker> completedMissions = missionCheckers.stream()
                 .filter(checker -> checker.check(event).isPresent())
@@ -218,4 +236,43 @@ public class GamificationService {
         }
         return gamificationProperties.getDailyModifier().getSubsequentWorkouts();
     }
+
+    private int detectAndRewardPersonalRecords(User user, WorkoutLog completedLog) {
+        int prCount = 0;
+        long xpPerPr = gamificationProperties.getXpPerPersonalRecord();
+
+        for (ExerciseLog exerciseLog : completedLog.getExerciseLogs()) {
+            if (exerciseLog.getMaxWeight() == null || exerciseLog.getMaxWeight() <= 0
+                    || exerciseLog.getExercise() == null) {
+                continue;
+            }
+
+            Optional<Double> historicalMax = exerciseLogRepository
+                    .findMaxWeightByUserAndExercise(user, exerciseLog.getExercise());
+
+            // Se não há registro histórico, é o primeiro treino desse exercício — não conta como PR
+            if (historicalMax.isEmpty()) {
+                continue;
+            }
+
+            // PR: carga atual supera o máximo histórico
+            if (exerciseLog.getMaxWeight() > historicalMax.get()) {
+                prCount++;
+                logger.info("🏆 PR detectado! Exercício: {}, Carga anterior: {} kg, Nova carga: {} kg",
+                        exerciseLog.getExerciseName(),
+                        historicalMax.get(),
+                        exerciseLog.getMaxWeight());
+            }
+        }
+
+        if (prCount > 0) {
+            long prBonusXp = prCount * xpPerPr;
+            user.setExperiencePoints(user.getExperiencePoints() + prBonusXp);
+            logger.info("🎯 {} PR(s) quebrado(s)! Bônus total: +{} XP para o utilizador {}",
+                    prCount, prBonusXp, user.getEmail());
+        }
+
+        return prCount;
+    }
 }
+

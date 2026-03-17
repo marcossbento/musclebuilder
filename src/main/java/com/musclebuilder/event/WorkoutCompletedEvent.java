@@ -9,6 +9,7 @@ import java.util.List;
 public class WorkoutCompletedEvent {
     private final WorkoutLog workoutLog;
     private final List<Achievement> newlyAwardedAchievements = new ArrayList<>();
+    private int personalRecordsCount;
 
     public WorkoutCompletedEvent(WorkoutLog workoutLog) {
         this.workoutLog = workoutLog;
@@ -16,6 +17,14 @@ public class WorkoutCompletedEvent {
 
     public WorkoutLog getWorkoutLog() {
         return workoutLog;
+    }
+
+    public int getPersonalRecordsCount() {
+        return personalRecordsCount;
+    }
+
+    public void setPersonalRecordsCount(int personalRecordsCount) {
+        this.personalRecordsCount = personalRecordsCount;
     }
 
     public void addAchievements(List<Achievement> achievements) {

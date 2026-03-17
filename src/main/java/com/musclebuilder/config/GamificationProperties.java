@@ -10,6 +10,7 @@ public class GamificationProperties {
     private long xpPerWorkout = 150;
     private double xpPerVolumeUnit = 0.5;
     private double volumeXpCapRatio = 2.0;
+    private long xpPerPersonalRecord = 50;
     private DailyModifier dailyModifier = new DailyModifier();
 
     public long getXpPerWorkout() {
@@ -34,6 +35,14 @@ public class GamificationProperties {
 
     public void setVolumeXpCapRatio(double volumeXpCapRatio) {
         this.volumeXpCapRatio = volumeXpCapRatio;
+    }
+
+    public long getXpPerPersonalRecord() {
+        return xpPerPersonalRecord;
+    }
+
+    public void setXpPerPersonalRecord(long xpPerPersonalRecord) {
+        this.xpPerPersonalRecord = xpPerPersonalRecord;
     }
 
     public DailyModifier getDailyModifier() {
